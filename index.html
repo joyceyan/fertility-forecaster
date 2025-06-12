@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fertility Forecaster</title>
+  <!-- Random crap for SEO -->
+  <title>Fertility Forecaster | Fertility Calculator by Age</title>
+  <meta name="description" content="Fertility Forecaster helps you estimate your chances of having 1, 2, or 3 children based on your current age. See how your fertility changes over time, with or without IVF." />
+  <meta property="og:title" content="Fertility Forecaster | Fertility Calculator by Age">
+  <meta property="og:description" content="Estimate your chances of having 1–3 kids based on your age. Understand how fertility changes with or without IVF.">
+  <meta property="og:image" content="heart-hands.png">
+  <meta property="og:url" content="https://fertilityforecaster.com">
+  <meta name="twitter:card" content="summary_large_image">
   <!-- Base Web CDN -->
   <link rel="stylesheet" href="https://unpkg.com/baseui@latest/dist/baseui.min.css">
   <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
@@ -85,10 +92,30 @@
   </style>
   <link rel="icon" type="image/png" href="heart-hands.png" />
 </head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XRKHZ5YDB7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XRKHZ5YDB7');
+</script>
+
 <body>
 
   <div class="container">
     <h1>Fertility Forecaster</h1>
+
+    <div style="margin-top: 40px; color: #574964; font-size: 16px; line-height: 1.6;">
+    <p>
+      Wondering what age to start trying for kids? This fertility calculator uses real data to help you plan when to start trying to conceive.
+    </p>
+    <p>
+      In general, fertility will decline with age. This tool shows you how your chances of having 1, 2, or 3 children evolve over time--giving you data to make an informed decision.
+    </p>
+  </div>
 
     <label for="age">Maternal age</label>
     <input type="number" id="age" />
