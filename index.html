@@ -80,7 +80,7 @@
       box-sizing: border-box;
     }
 
-    /* Remove number input spinner (already applied) */
+    /* Remove number input spinner */
     input[type="number"] {
       -moz-appearance: textfield;
     }
@@ -88,6 +88,18 @@
     input[type="number"]::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   </style>
   <link rel="icon" type="image/png" href="heart-hands.png" />
@@ -112,7 +124,7 @@
     <p>
       Wondering what age to start trying for kids? This fertility calculator uses real data to help you plan when to start trying to conceive.
     </p>
-    <p>
+    <p class="visually-hidden">
       In general, fertility will decline with age. This tool shows you how your chances of having 1, 2, or 3 children evolve over time--giving you data to make an informed decision.
     </p>
   </div>
