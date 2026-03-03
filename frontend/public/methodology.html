@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Methodology - Fertility Forecaster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: #fafaf9;
+        color: #292524;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 5rem;
+      }
+      a { color: #57534e; }
+      a:hover { color: #1c1917; }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #78716c;
+        text-decoration: none;
+        margin-bottom: 2rem;
+      }
+      .back:hover { color: #292524; }
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        font-size: 0.875rem;
+        color: #78716c;
+        margin-bottom: 2.5rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 0.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e7e5e4;
+      }
+      h2:first-of-type { border-top: none; padding-top: 0; }
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      p { margin-bottom: 0.75rem; font-size: 0.9375rem; }
+      ol, ul { margin-bottom: 0.75rem; padding-left: 1.5rem; font-size: 0.9375rem; }
+      li { margin-bottom: 0.35rem; }
+      em { font-style: italic; }
+      strong { font-weight: 600; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.875rem;
+      }
+      th, td {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      th {
+        font-weight: 600;
+        background: #f5f5f4;
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: #57534e;
+      }
+      .source-tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #78716c;
+        background: #f5f5f4;
+        border-radius: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .source-tag a { color: #78716c; text-decoration: underline; text-decoration-color: #a8a29e; text-underline-offset: 2px; }
+      .source-tag a:hover { color: #292524; text-decoration-color: #292524; }
+      .note {
+        background: #f5f5f4;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        font-size: 0.875rem;
+        color: #57534e;
+        margin: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back to Forecaster
+      </a>
+
+      <h1>Methodology</h1>
+      <p class="subtitle">How the Fertility Forecaster model works, what data it uses, and what it doesn't account for.</p>
+
+      <!-- Overview -->
+      <h2>Overview</h2>
+      <p>
+        Fertility Forecaster is a statistical simulation tool that estimates the probability of completing a desired family size given your age, health, reproductive history, and available fertility interventions.
+
+      <!-- How the Model Works -->
+      <h2>How the Model Works</h2>
+      <p>At a high level, the simulation runs a loop for each virtual couple:</p>
+      <ol>
+        <li>Each couple is assigned an individual fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle, but individual couples range anywhere from about 2% to 57% (see Section 8).</li>
+        <li>Each menstrual cycle (~1 month), the model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers have lower odds each cycle.</li>
+        <li>A random draw determines whether conception occurs.</li>
+        <li>If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates. This is further adjusted for any miscarriage history and male partner age, if applicable.</li>
+        <li>If the couple fails to conceive naturally for a configurable number of consecutive cycles (default 12) and is open to IVF, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF.</li>
+        <li>The loop repeats until the couple achieves their desired number of children or the woman turns 45.</li>
+      </ol>
+      <p>After simulating all 10,000 couples, the model reports what percentage achieved the desired family size.</p>
+
+      <!-- Data Sources -->
+      <h2>Data Sources</h2>
+
+      <!-- 1. Base Per-Cycle Conception Probability -->
+      <h3>1. Base Per-Cycle Conception Probability</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Leridon, 2004 (via Habbema 2015)</a></p>
+      <p>
+        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2).
+      </p>
+      <p>
+        You may see ~25% cited elsewhere, but that figure tends to come from studies such as the PRESTO study that only recruited couples who were already trying to conceive, which naturally skews the number upward. The 23% figure is based on historical population data and is designed to represent the broader population, including couples who may take longer to conceive.
+      </p>
+
+      <!-- 2. Age-Specific Adjustment -->
+      <h3>2. How Age Affects Your Odds</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink et al., 2017</a></p>
+      <p>
+        Your per-cycle odds of getting pregnant decline with age. The table below shows this as a ratio relative to the 21&ndash;24 age group, where the ratio is 1.00 (no decline). A ratio of 0.68 means your per-cycle odds have dropped to 68% of the baseline &mdash; so instead of 23%, you'd have about a 15.6% chance each cycle.
+      </p>
+      <p>
+        The model uses two different curves depending on whether you've been pregnant before:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Age group</th><th>Never been pregnant</th><th>Been pregnant before</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>21&ndash;24</td><td>1.00 (23.0%)</td><td>1.00 (23.0%)</td></tr>
+          <tr><td>25&ndash;27</td><td>0.89 (20.5%)</td><td>0.93 (21.4%)</td></tr>
+          <tr><td>28&ndash;30</td><td>0.88 (20.2%)</td><td>0.89 (20.5%)</td></tr>
+          <tr><td>31&ndash;33</td><td>0.79 (18.2%)</td><td>0.93 (21.4%)</td></tr>
+          <tr><td>34&ndash;36</td><td>0.68 (15.6%)</td><td>0.96 (22.1%)</td></tr>
+          <tr><td>37&ndash;39</td><td>0.51 (11.7%)</td><td>0.70 (16.1%)</td></tr>
+          <tr><td>40&ndash;45</td><td>0.20 (4.6%)</td><td>0.48 (11.0%)</td></tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Why the difference?</strong> &ldquo;Been pregnant before&rdquo; includes any prior pregnancy &mdash; even ones that ended in miscarriage, not just live births. Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant &mdash; a 35-year-old who has been pregnant before has about 22% odds per cycle, versus about 16% for someone who hasn't.
+      </p>
+      <p>
+        Note that male age does not meaningfully affect conception odds after controlling for female age &mdash; it only factors into miscarriage risk (see Section 4).
+      </p>
+
+      <!-- 3. Miscarriage -->
+      <h3>3. Miscarriage Rates by Age</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1136/bmj.l869">Magnus et al., 2019</a></p>
+      <p>
+        Not every pregnancy results in a live birth. Miscarriage risk varies with age and is lowest in the late 20s:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Age group</th><th>Miscarriage rate</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 20</td><td>15.8%</td></tr>
+          <tr><td>20&ndash;24</td><td>11.3%</td></tr>
+          <tr><td>25&ndash;29</td><td>9.8%</td></tr>
+          <tr><td>30&ndash;34</td><td>10.8%</td></tr>
+          <tr><td>35&ndash;39</td><td>16.7%</td></tr>
+          <tr><td>40&ndash;44</td><td>32.2%</td></tr>
+          <tr><td>45+</td><td>53.6%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        If you've had consecutive miscarriages, the risk for the next pregnancy increases:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Consecutive miscarriages</th><th>Risk multiplier</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>1.0&times; (baseline)</td></tr>
+          <tr><td>1</td><td>1.5&times;</td></tr>
+          <tr><td>2</td><td>2.2&times;</td></tr>
+          <tr><td>3+</td><td>4.0&times;</td></tr>
+        </tbody>
+      </table>
+      <p>
+        After a miscarriage in the simulation, the couple waits 3 months before trying again. The consecutive miscarriage count resets to zero after a successful live birth.
+      </p>
+
+      <!-- 4. Male age -->
+      <h3>4. Male Age and Miscarriage Risk</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1001/jamanetworkopen.2024.36157">Boxem et al., 2024</a></p>
+      <p>
+        If the father is 40 or older, the risk of miscarriage roughly doubles (2&times;). The father's age does not affect the odds of getting pregnant &mdash; only whether the pregnancy carries to term. In the simulation, the male ages alongside the female, so this kicks in when he crosses 40.
+      </p>
+
+      <!-- 5. BMI -->
+      <h3>5. BMI and Natural Conception</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1016/j.fertnstert.2016.04.011">McKinnon et al., 2016</a></p>
+      <p>
+        BMI has a modest effect on per-cycle conception odds. Below BMI 35, the impact is negligible. Above 35, it becomes meaningful:
+      </p>
+      <table>
+        <thead>
+          <tr><th>BMI</th><th>Effect on conception odds</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 18.5 (underweight)</td><td>1.05&times; (slightly higher)</td></tr>
+          <tr><td>18.5&ndash;24 (normal)</td><td>1.00&times; (baseline)</td></tr>
+          <tr><td>25&ndash;29 (overweight)</td><td>1.01&times; (negligible)</td></tr>
+          <tr><td>30&ndash;34</td><td>0.98&times; (negligible)</td></tr>
+          <tr><td>35&ndash;39</td><td>0.78&times; (&minus;22%)</td></tr>
+          <tr><td>40&ndash;44</td><td>0.61&times; (&minus;39%)</td></tr>
+          <tr><td>45+</td><td>0.42&times; (&minus;58%)</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 6. BMI and IVF -->
+      <h3>6. BMI and IVF Success</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humupd/dmz011">Sermondade et al., 2019</a></p>
+      <p>
+        Women with a BMI of 30 or higher have about a 15% lower chance of a live birth from IVF compared to normal-weight women. This applies to all IVF pathways (fresh IVF, frozen eggs, and frozen embryos).
+      </p>
+
+      <!-- 7. Smoking -->
+      <h3>7. Smoking and Conception</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dey372">Wesselink et al., 2019</a></p>
+      <p>
+        Smoking reduces your per-cycle odds of getting pregnant naturally:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Smoking status</th><th>Effect on conception odds</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Never smoked</td><td>1.00&times; (baseline)</td></tr>
+          <tr><td>Former smoker</td><td>0.89&times; (&minus;11%)</td></tr>
+          <tr><td>Occasional smoker</td><td>0.88&times; (&minus;12%)</td></tr>
+          <tr><td>Regular smoker (&ge;10/day)</td><td>0.77&times; (&minus;23%)</td></tr>
+        </tbody>
+      </table>
+      <p>This adjustment applies to natural conception only, not IVF.</p>
+
+      <!-- 8. Individual Variation -->
+      <h3>8. Individual Variation Between Couples</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dey317">van Eekelen et al., 2018</a></p>
+      <p>
+        Not every couple has the same fertility. The 23% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity).
+      </p>
+      <p>
+        This matters a lot for predicting families with multiple children. If the model treated every couple as equally fertile, it would be too optimistic: it wouldn't account for the fact that a couple who struggled to conceive their first child will likely also struggle with their second.
+      </p>
+      <p>
+        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life &mdash; it represents their inherent &ldquo;fertility type.&rdquo; The spread looks like this:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Couple percentile</th><th>Per-cycle chance of conceiving</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>5th (least fertile)</td><td>2.1%</td></tr>
+          <tr><td>25th</td><td>9.2%</td></tr>
+          <tr><td>50th (median)</td><td>19.3%</td></tr>
+          <tr><td>75th</td><td>33.4%</td></tr>
+          <tr><td>95th (most fertile)</td><td>56.7%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        A couple at the 95th percentile has roughly a coin-flip chance of getting pregnant each month, while a couple at the 5th percentile faces long odds. Age-related decline is then applied on top of each couple's personal rate.
+      </p>
+      <p>
+        <strong>If you've already been trying:</strong> If you tell the model you've been trying for several months without success, it adjusts downward &mdash; the logic being that highly fertile couples would have already conceived by now, so you're more likely to be in the lower part of the distribution:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Months trying</th><th>Estimated average rate</th><th>Likely range (middle 90%)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0 (just starting)</td><td>23.0%</td><td>2.1% &ndash; 56.7%</td></tr>
+          <tr><td>6 months</td><td>10.5%</td><td>0.8% &ndash; 28.2%</td></tr>
+          <tr><td>12 months</td><td>6.8%</td><td>0.5% &ndash; 18.6%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        This doesn't mean your biology changed &mdash; it just means the model has a better guess about where you fall in the distribution.
+      </p>
+
+      <!-- 9. Sterility -->
+      <h3>9. Permanent Sterility</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Leridon, 2004 (via Habbema 2015)</a></p>
+      <p>
+        A small percentage of women become permanently unable to conceive naturally at each age (due to things like premature ovarian failure). This is separate from the gradual age-related decline &mdash; it's an all-or-nothing threshold:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Age</th><th>Chance of permanent sterility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>25</td><td>1%</td></tr>
+          <tr><td>30</td><td>2%</td></tr>
+          <tr><td>35</td><td>5%</td></tr>
+          <tr><td>38</td><td>10%</td></tr>
+          <tr><td>40</td><td>17%</td></tr>
+          <tr><td>42</td><td>30%</td></tr>
+          <tr><td>45</td><td>55%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        If you tell the model you've had a previous pregnancy, it won't assign you premature sterility at an age when you were demonstrably fertile. IVF can bypass most causes of natural sterility.
+      </p>
+
+      <!-- 10. IVF -->
+      <h3>10. IVF Success Rates (Fresh Cycles)</h3>
+      <p class="source-tag">CDC ART National Summary Reports; UK HFEA dataset</p>
+      <table>
+        <thead>
+          <tr><th>Age</th><th>Chance of live birth per IVF cycle</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 35</td><td>40%</td></tr>
+          <tr><td>35&ndash;37</td><td>30%</td></tr>
+          <tr><td>38&ndash;40</td><td>20%</td></tr>
+          <tr><td>41&ndash;42</td><td>12%</td></tr>
+          <tr><td>43&ndash;44</td><td>5%</td></tr>
+          <tr><td>45+</td><td>2%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Each IVF cycle takes about 2 months. By default, the model allows up to 3 fresh IVF cycles across your entire reproductive timeline.
+      </p>
+
+      <!-- 11. Frozen Eggs -->
+      <h3>11. Frozen Eggs</h3>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humupd/dmae009">Hirsch et al., 2024</a>; <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath et al., 2025</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
+      <p>
+        About 78.5% of frozen eggs survive the thawing process. The chance of a live birth from each surviving egg depends on how old you were when they were frozen:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Age when eggs were frozen</th><th>Live birth rate per egg</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 35</td><td>13%</td></tr>
+          <tr><td>35&ndash;37</td><td>9%</td></tr>
+          <tr><td>38&ndash;40</td><td>6%</td></tr>
+          <tr><td>&gt; 40</td><td>4%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The key benefit: eggs frozen at 30 retain the quality of a 30-year-old's eggs, even if used at 40. Up to 9 eggs are thawed per cycle.
+      </p>
+
+      <!-- 12. Frozen Embryos -->
+      <h3>12. Frozen Embryos</h3>
+      <p class="source-tag">CDC ART Reports; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
+      <p>
+        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success depends on the woman's age when the embryos were created:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Age when embryos were created</th><th>Live birth rate per transfer</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 35</td><td>40%</td></tr>
+          <tr><td>35&ndash;37</td><td>30%</td></tr>
+          <tr><td>38&ndash;40</td><td>20%</td></tr>
+          <tr><td>41&ndash;42</td><td>12%</td></tr>
+          <tr><td>&gt; 42</td><td>5%</td></tr>
+        </tbody>
+      </table>
+
+      <h4>PGT-A Tested (Euploid) Embryos</h4>
+      <p>
+        Embryos that have been screened with preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher success rates, because the main age-dependent cause of failure &mdash; chromosomal abnormalities &mdash; has been removed.
+      </p>
+      <p class="source-tag"><a href="https://doi.org/10.1186/s13048-025-01602-9">Jiang et al., 2025</a></p>
+      <table>
+        <thead>
+          <tr><th>Age when embryos were created</th><th>Untested</th><th>PGT-A tested</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 35</td><td>40%</td><td>54.5%</td></tr>
+          <tr><td>35&ndash;37</td><td>30%</td><td>54.0%</td></tr>
+          <tr><td>38&ndash;40</td><td>20%</td><td>41.7%</td></tr>
+          <tr><td>41&ndash;42</td><td>12%</td><td>35.0%</td></tr>
+          <tr><td>&gt; 42</td><td>5%</td><td>30.0%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The 41&ndash;42 and 43+ rates are extrapolated. Even euploid embryos from older eggs have reduced implantation from non-chromosomal factors (mitochondrial quality, epigenetics).
+      </p>
+
+      <h2>Comparison with Habbema et al. 2015</h2>
+      <p>
+        Fertility Forecaster's model is based on the family completion modeling approach from <a href="https://doi.org/10.1093/humrep/dev148">Habbema et al. 2015</a>, the standard reference for &ldquo;when should couples start trying?&rdquo; That study simulated 10,000 virtual couples cycle-by-cycle to calculate the latest age you can start trying and still have a given probability of completing your family:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Confidence level</th><th>1 child</th><th>2 children</th><th>3 children</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4"><strong>Without IVF</strong></td></tr>
+          <tr><td>50%</td><td>41</td><td>38</td><td>35</td></tr>
+          <tr><td>75%</td><td>37</td><td>34</td><td>31</td></tr>
+          <tr><td>90%</td><td>32</td><td>27</td><td>23</td></tr>
+          <tr><td colspan="4"><strong>With IVF</strong></td></tr>
+          <tr><td>50%</td><td>42</td><td>39</td><td>36</td></tr>
+          <tr><td>75%</td><td>39</td><td>35</td><td>33</td></tr>
+          <tr><td>90%</td><td>35</td><td>31</td><td>28</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Our model uses the same core simulation approach and matches Habbema's benchmark cutoff ages within &plusmn;1.5 years, but extends it in several ways:
+      </p>
+
+      <h3>Newer miscarriage data</h3>
+      <p>
+        Habbema used miscarriage rates from Leridon 2004, which were based on older data. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, a registry study of 421,201 pregnancies in Norway with more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1001/jamanetworkopen.2024.36157">male partner age</a> on miscarriage, which Habbema did not model.
+      </p>
+
+      <h3>Newer IVF data</h3>
+      <p>
+        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the CDC Assisted Reproductive Technology National Summary Reports and the UK HFEA dataset (250,000+ treatment records), which reflect these improvements.
+      </p>
+
+      <h3>Frozen eggs, frozen embryos, and PGT-A</h3>
+      <p>
+        Habbema's model included fresh IVF as the only assisted reproduction option. Ours adds frozen egg batches (with age-at-freeze-dependent per-oocyte rates from <a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a> and <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>), frozen embryo batches (with higher per-transfer rates than fresh IVF), and PGT-A tested embryos (with euploid transfer rates from <a href="https://doi.org/10.1186/s13048-025-01602-9">Jiang 2025</a>). Users can enter their actual frozen inventory and the model will use it before falling back to fresh IVF.
+      </p>
+
+      <h3>Pregnancy history affects age-related decline</h3>
+      <p>
+        Habbema used a single age-decline curve for all women. We use two separate curves from <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink 2017</a>: one for women who have never been pregnant, and one for women who have been pregnant before (see Section 2). The difference is large &mdash; at age 35, a woman who has been pregnant before retains about 96% of her baseline fertility, versus 68% for someone who hasn't. This isn't because pregnancy itself improves fertility; it's because women who have never conceived by their late 30s are more likely to include those with undiagnosed subfertility conditions, which drags the group average down.
+      </p>
+      <p>
+        In practice, this makes our model <strong>more optimistic for second and third children</strong> compared to Habbema. If you've already had one child, you've demonstrated that your reproductive system works, so the model applies the more favorable &ldquo;been pregnant before&rdquo; decline curve for your subsequent children.
+      </p>
+
+      <h3>BMI and smoking adjustments</h3>
+      <p>
+        Habbema's model did not account for BMI or smoking. Ours adjusts natural conception odds based on BMI (<a href="https://doi.org/10.1016/j.fertnstert.2016.04.011">McKinnon 2016</a>) and smoking status (<a href="https://doi.org/10.1093/humrep/dey372">Wesselink 2019</a>), and applies a separate BMI penalty to IVF success rates (<a href="https://doi.org/10.1093/humupd/dmz011">Sermondade 2019</a>). The effects are modest below BMI 35 and for former smokers, but substantial at higher BMI or for regular smokers.
+      </p>
+
+      <h3>User-configurable parameters</h3>
+      <p>
+        Habbema's model hard-codes several assumptions:
+      </p>
+      <ul>
+        <li>Couples wait at least 15 months after the birth of a child before trying for the next pregnancy.</li>
+        <li>IVF begins after 2 years of unsuccessful natural trying if the woman is under 33, or 1 year if she is 33 or older.</li>
+        <li>Only 3 IVF cycles are attempted per child.</li>
+      </ul>
+      <p>
+        In our model, all of these are user-configurable &mdash; you can set the minimum spacing between births, how many months of natural trying before IVF, and how many total IVF cycles you're willing to attempt. This lets you model scenarios closer to your actual plans rather than relying on the study's assumptions.
+      </p>
+
+      <!-- Factors Not Included -->
+      <h2>Factors We Looked At But Didn't Include</h2>
+      <ul>
+        <li><strong>Caffeine</strong> &mdash; No meaningful effect at normal consumption levels (<a href="https://doi.org/10.1093/ajcn/nqab435">Purdue-Smithe et al., 2022</a>).</li>
+        <li><strong>Alcohol</strong> &mdash; No clear effect at moderate intake (<a href="https://doi.org/10.1093/humrep/dez294">H&oslash;yer et al., 2020</a>).</li>
+        <li><strong>Marijuana</strong> &mdash; No overall effect for either partner (<a href="https://doi.org/10.1136/jech-2017-209755">Wise et al., 2018</a>).</li>
+        <li><strong>Stress</strong> &mdash; Real effect (<a href="https://doi.org/10.1097/EDE.0000000000001079">Schliep et al., 2019</a>), but too variable to quantify as a stable input.</li>
+        <li><strong>Vitamin D</strong> &mdash; No association with miscarriage risk (<a href="https://doi.org/10.1093/humrep/deac155">Subramanian et al., 2022</a>).</li>
+        <li><strong>Male BMI</strong> &mdash; No association with time to pregnancy on its own (<a href="https://doi.org/10.1093/humrep/dex001">Sundaram et al., 2017</a>; <a href="https://doi.org/10.1111/jog.15299">Zhang et al., 2022</a>).</li>
+        <li><strong>Intercourse frequency</strong> &mdash; Meaningful, but highly variable from month to month so difficult to quantify as a stable input.</li>
+      </ul>
+
+      <!-- Limitations -->
+      <h2>Limitations</h2>
+      <p>
+        This model gives you population-level estimates. Your individual situation depends on many factors it can't measure, including ovarian reserve (AMH), specific conditions like PCOS or endometriosis, sperm quality, and genetic factors. The model assumes no underlying fertility diagnoses beyond what's captured by age, BMI, smoking, and reproductive history.
+      </p>
+      <p>
+        The data comes primarily from North American and Northern European populations. Results may not apply equally across all backgrounds.
+      </p>
+      <div class="note">
+        This tool is not medical advice. Please consult a healthcare provider for a personalized fertility assessment.
+      </div>
+    </div>
+  </body>
+</html>
