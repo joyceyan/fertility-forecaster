@@ -2,11 +2,12 @@ export default function Footer() {
   return (
     <footer className="mt-12 border-t border-stone-200 pt-8 pb-12">
       <p className="text-xs leading-relaxed text-stone-500">
-        <strong>Disclaimer:</strong> This tool provides statistical estimates
-        based on population-level data and Monte Carlo simulation. It is not
-        medical advice. Individual outcomes vary significantly based on factors
-        not captured here. Consult a reproductive endocrinologist for
-        personalized guidance.
+        <strong>Disclaimer:</strong> Fertility Forecaster provides statistical
+        estimates of your odds of getting pregnant based on published medical
+        research and Monte Carlo simulation. It is not medical advice.
+        Individual outcomes depend on factors like ovarian reserve, sperm
+        quality, and conditions not captured here. Consult a reproductive
+        endocrinologist for personalized fertility guidance.
       </p>
 
       <div className="mt-4">

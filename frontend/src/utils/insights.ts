@@ -162,10 +162,13 @@ export function generateDetailedInsights(
     const ivfPoint = findPointAtAge(data.scenarios.with_ivf, form.user_age);
     const frozenPoint = findPointAtAge(data.scenarios.with_frozen, form.user_age);
     if (ivfPoint && frozenPoint) {
-      insights.push({
-        id: "frozen-benefit",
-        text: `Your frozen reserves improve your odds at age ${form.user_age} from ${formatPercent(ivfPoint.completion_rate)} to ${formatPercent(frozenPoint.completion_rate)}.`,
-      });
+      const boost = frozenPoint.completion_rate - ivfPoint.completion_rate;
+      if (boost > 0.001) {
+        insights.push({
+          id: "frozen-benefit",
+          text: `Your frozen reserves improve your odds at age ${form.user_age} from ${formatPercent(ivfPoint.completion_rate)} to ${formatPercent(frozenPoint.completion_rate)}.`,
+        });
+      }
     }
   }
 

@@ -16,7 +16,7 @@ At a high level, the simulation runs a loop for each virtual couple:
 2. Each menstrual cycle (~1 month), the model calculates a personalized per-cycle conception probability by applying age-ratio decline to the couple's individual fecundability, then multiplying by BMI and smoking adjustments. Permanently sterile couples get zero probability.
 3. A random draw determines whether conception occurs.
 4. If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates adjusted for recurrent miscarriage history and male partner age.
-5. If the couple fails to conceive naturally for `cycles_before_ivf` consecutive cycles (default 12) and is open to assisted reproduction, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF — up to `max_ivf_cycles` total IVF cycles (default 3) across the couple's lifetime.
+5. If the couple fails to conceive naturally for `cycles_before_ivf` consecutive cycles (default 12) and is open to assisted reproduction, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF — up to `max_ivf_cycles` fresh IVF cycles (default 3) across the couple's lifetime. Frozen embryo and frozen egg cycles do not count toward this cap.
 6. The loop repeats until the couple achieves their desired number of children or the woman turns 45.
 
 After simulating all 10,000 couples, the model reports what percentage achieved the desired family size, how long it took, and what proportion of successes came from each conception method (natural, fresh IVF, frozen egg IVF, frozen embryo transfer).
@@ -37,7 +37,7 @@ After simulating all 10,000 couples, the model reports what percentage achieved 
 
 A commonly cited figure in reproductive medicine is ~25% per cycle for young women, but this likely reflects upward selection bias — studies that recruit couples actively trying to conceive (e.g., the PRESTO cohort, Wesselink 2017) tend to enroll higher-fertility couples and exclude the lower end of the fertility distribution. The 23% figure is designed to represent the general population, including those who may take longer to conceive.
 
-This value was validated by calibrating the model against Habbema's benchmark cutoff ages (the ages at which 90% of couples complete 1, 2, or 3 children), where our model matches within ±1.5 years across all benchmarks.
+This value was validated by calibrating the model against Habbema's benchmark cutoff ages (the ages at which 90% of couples complete 1, 2, or 3 children), where our model matches within ±2 years across all benchmarks.
 
 **How it's used in the model:** This 23% base rate is multiplied by age-specific fecundability ratios (see Section 2) to produce the population-mean conception probability at each age. Individual couples then draw from a Beta distribution centered on this mean (see Section 8), producing realistic between-couple variation.
 
@@ -45,22 +45,24 @@ This value was validated by calibrating the model against Habbema's benchmark cu
 
 ### 2. Age-Specific Fecundability (Natural Conception)
 
-**What it determines:** How the per-cycle probability of conception changes with the woman's age, relative to the 21-24 baseline.
+**What it determines:** How the per-cycle probability of conception changes with the woman's age, relative to the 18-24 baseline.
 
 **Source:** Wesselink AK, et al. "Age and fecundability in a North American preconception cohort study." *American Journal of Obstetrics and Gynecology*. 2017. [DOI: 10.1016/j.ajog.2017.09.002](https://doi.org/10.1016/j.ajog.2017.09.002)
 
 **About the study:** The PRESTO (Pregnancy Study Online) cohort is a web-based prospective study of North American couples actively trying to conceive. This analysis included 2,962 couples with no history of infertility who had been trying for ≤3 cycles at enrollment. Couples were followed for up to 12 menstrual cycles.
 
-**What we use:** The study reports adjusted fecundability ratios (FRs) by age group relative to the 21-24 age reference group, stratified by gravidity (whether the woman has ever been pregnant before). We use both the nulligravid and gravid curves to construct two separate age-fecundability functions. At each age, we multiply the base per-cycle conception probability (see Section 1) by the appropriate FR.
+**What we use:** The study reports adjusted fecundability ratios (FRs) by age group relative to the 21-24 age reference group, stratified by gravidity (whether the woman has ever been pregnant before). We use both the nulligravid and gravid curves from Table 3 to construct two separate age-fecundability functions. At each age, we multiply the base per-cycle conception probability (see Section 1) by the appropriate FR.
 
-**Key data points (fecundability ratios, adjusted, relative to ages 21-24):**
+**Expansion to ages 18-20:** The Wesselink study's youngest group is 21-24. Our model allows users as young as 18, so we extend the reference group to 18-24 by assuming that women aged 18-20 have the same fecundability ratio (1.00) as the 21-24 group. This is a reasonable assumption: there is no published evidence of meaningful fecundability differences within the 18-24 range, and the biological rationale for age-related decline (diminishing ovarian reserve, increased oocyte aneuploidy) does not apply at these young ages.
+
+**Key data points (fecundability ratios, adjusted, relative to ages 21-24, from Table 3):**
 
 | Age group | Nulligravid | Previously gravid |
 |-----------|-------------|-------------------|
-| 21-24     | 1.00        | 1.00              |
-| 25-27     | 0.89        | 0.93              |
-| 28-30     | 0.88        | 0.89              |
-| 31-33     | 0.79        | 0.93              |
+| 18-24     | 1.00        | 1.00              |
+| 25-27     | 0.88        | 0.92              |
+| 28-30     | 0.80        | 0.95              |
+| 31-33     | 0.84        | 0.88              |
 | 34-36     | 0.68        | 0.96              |
 | 37-39     | 0.51        | 0.70              |
 | 40-45     | 0.20        | 0.48              |
@@ -353,7 +355,7 @@ The following parameters can be configured by the user:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `female_age` | (required) | Woman's current age (15-45) |
+| `female_age` | (required) | Woman's current age (18-45) |
 | `desired_children` | (required) | Target family size (1-6) |
 | `male_age` | None | Male partner age (affects miscarriage risk if ≥40) |
 | `bmi` | None | Female BMI (affects natural conception and IVF) |
@@ -363,7 +365,7 @@ The following parameters can be configured by the user:
 | `max_ivf_cycles` | 3 | Lifetime cap on fresh IVF cycles |
 | `min_spacing_months` | 18 | Minimum months between births |
 | `prior_live_births` | 0 | Number of existing children |
-| `prior_miscarriages` | 0 | Number of prior consecutive miscarriages |
+| `prior_miscarriages` | 0 | Consecutive miscarriages since last live birth (resets to 0 after each live birth; used to seed recurrent miscarriage risk) |
 | `cycles_tried` | 0 | Months already spent trying (shifts fecundability draws lower) |
 | `frozen_egg_batches` | () | Batches of frozen eggs (age at freeze, count) |
 | `frozen_embryo_batches` | () | Batches of frozen embryos (age at freeze, count) |

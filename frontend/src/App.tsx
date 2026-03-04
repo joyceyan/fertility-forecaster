@@ -3,13 +3,31 @@ import type { DraftFormState, FormState } from "./api/types";
 import { validateDraft } from "./api/types";
 import { INITIAL_DRAFT } from "./constants/defaults";
 import { useSweep } from "./hooks/useSweep";
+import { getTypicalEggsRetrieved } from "./constants/fertility";
 import InputForm from "./components/form/InputForm";
 import ResultsPanel from "./components/results/ResultsPanel";
 import Footer from "./components/Footer";
 
+interface WhatIfFreeze {
+  enabled: boolean;
+  numEggs: number;
+}
+
+function buildEffectiveForm(base: FormState, freeze: WhatIfFreeze): FormState {
+  if (!freeze.enabled) return base;
+  return {
+    ...base,
+    frozen_egg_batches: [
+      ...base.frozen_egg_batches,
+      { age_at_freeze: base.user_age, num_eggs: freeze.numEggs },
+    ],
+  };
+}
+
 export default function App() {
   const [form, setForm] = useState<DraftFormState>(INITIAL_DRAFT);
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null);
+  const [whatIfFreeze, setWhatIfFreeze] = useState<WhatIfFreeze>({ enabled: false, numEggs: 15 });
   const { data, status, error, run } = useSweep();
 
   const handleChange = useCallback((updates: Partial<DraftFormState>) => {
@@ -20,8 +38,36 @@ export default function App() {
     const validated = validateDraft(form);
     if (!validated) return;
     setSubmittedForm(validated);
+    setWhatIfFreeze({ enabled: false, numEggs: getTypicalEggsRetrieved(validated.user_age) });
     run(validated);
   };
+
+  const handleWhatIfToggle = useCallback(
+    (enabled: boolean) => {
+      setWhatIfFreeze((prev) => {
+        const numEggs = enabled && submittedForm
+          ? getTypicalEggsRetrieved(submittedForm.user_age)
+          : prev.numEggs;
+        const next = { enabled, numEggs };
+        if (submittedForm) run(buildEffectiveForm(submittedForm, next));
+        return next;
+      });
+    },
+    [submittedForm, run],
+  );
+
+  const handleWhatIfNumEggs = useCallback((numEggs: number) => {
+    setWhatIfFreeze((prev) => ({ ...prev, numEggs }));
+  }, []);
+
+  const handleWhatIfApply = useCallback(() => {
+    if (submittedForm) {
+      setWhatIfFreeze((prev) => {
+        run(buildEffectiveForm(submittedForm, prev));
+        return prev;
+      });
+    }
+  }, [submittedForm, run]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -30,8 +76,8 @@ export default function App() {
           Fertility Forecaster
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Explore how age, lifestyle, and reproductive choices affect your
-          chances of completing your family.
+          Calculate your odds of getting pregnant at every age. See how timing,
+          egg freezing, and IVF affect your chances of completing your family.
         </p>
       </header>
 
@@ -65,7 +111,15 @@ export default function App() {
           )}
 
           {data && submittedForm && (
-            <ResultsPanel form={submittedForm} data={data} loading={status === "loading"} />
+            <ResultsPanel
+              form={submittedForm}
+              data={data}
+              loading={status === "loading"}
+              whatIfFreeze={whatIfFreeze}
+              onWhatIfToggle={handleWhatIfToggle}
+              onWhatIfNumEggs={handleWhatIfNumEggs}
+              onWhatIfApply={handleWhatIfApply}
+            />
           )}
 
           {!data && !error && status !== "loading" && (
@@ -76,10 +130,10 @@ export default function App() {
                 </svg>
               </div>
               <p className="text-sm font-medium text-stone-600">
-                Answer the questions to see your fertility forecast
+                Find out your chances of getting pregnant at your age
               </p>
               <p className="mt-1 text-xs text-stone-400">
-                Fill in your age and family goals, then click "Calculate My Odds"
+                Enter your age and family goals, then click "Calculate My Odds" to see your personalized fertility forecast
               </p>
             </div>
           )}

@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <title>Methodology - Fertility Forecaster</title>
+    <title>How We Calculate Your Fertility Odds — Methodology | Fertility Forecaster</title>
+    <meta name="description" content="How the Fertility Forecaster model estimates your chances of getting pregnant at every age. Peer-reviewed data sources on conception rates, miscarriage risk, IVF success, egg freezing outcomes, and more." />
+    <link rel="canonical" href="https://fertilityforecaster.com/methodology.html" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -116,23 +118,24 @@
         Back to Forecaster
       </a>
 
-      <h1>Methodology</h1>
-      <p class="subtitle">How the Fertility Forecaster model works, what data it uses, and what it doesn't account for.</p>
+      <h1>Methodology: How We Calculate Your Fertility Odds</h1>
+      <p class="subtitle">The data and research behind Fertility Forecaster — including how we estimate your chances of getting pregnant at every age, whether egg freezing is worth it, and when to start trying for a baby.</p>
 
       <!-- Overview -->
       <h2>Overview</h2>
       <p>
-        Fertility Forecaster is a statistical simulation tool that estimates the probability of completing a desired family size given your age, health, reproductive history, and available fertility interventions.
+        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>What are my odds of getting pregnant at 35? Should I freeze my eggs? When should I start trying to conceive? How much does IVF improve my chances?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
 
       <!-- How the Model Works -->
       <h2>How the Model Works</h2>
-      <p>At a high level, the simulation runs a loop for each virtual couple:</p>
+      <p>At a high level, the simulation runs a loop for 10,000 virtual couples. For each virtual couple:</p>
       <ol>
-        <li>Each couple is assigned an individual fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle, but individual couples range anywhere from about 2% to 57% (see Section 8).</li>
-        <li>Each menstrual cycle (~1 month), the model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers have lower odds each cycle.</li>
+        <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle.</li>
+        <li>The model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers typically have lower fertility.</li>
         <li>A random draw determines whether conception occurs.</li>
         <li>If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates. This is further adjusted for any miscarriage history and male partner age, if applicable.</li>
-        <li>If the couple fails to conceive naturally for a configurable number of consecutive cycles (default 12) and is open to IVF, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF.</li>
+        <li>If the couple fails to conceive naturally for a configurable number of cycles (default 12) and is open to IVF, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF.</li>
+        <li>If the couple exhausts all fresh IVF attempts (default 3 lifetime cycles), they are permanently limited to natural conception for the remainder of the simulation. Frozen embryo and frozen egg cycles do not count toward this cap.</li>
         <li>The loop repeats until the couple achieves their desired number of children or the woman turns 45.</li>
       </ol>
       <p>After simulating all 10,000 couples, the model reports what percentage achieved the desired family size.</p>
@@ -147,37 +150,37 @@
         The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2).
       </p>
       <p>
-        You may see ~25% cited elsewhere, but that figure tends to come from studies such as the PRESTO study that only recruited couples who were already trying to conceive, which naturally skews the number upward. The 23% figure is based on historical population data and is designed to represent the broader population, including couples who may take longer to conceive.
+        The 23% figure is taken from Habbema et al. 2015's simulation model, which is based on historical data on monthly pregnancy chances in natural non-contraceptive populations collected by Henry (1965) and Leridon (1977).
       </p>
 
       <!-- 2. Age-Specific Adjustment -->
       <h3>2. How Age Affects Your Odds</h3>
       <p class="source-tag"><a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink et al., 2017</a></p>
       <p>
-        Your per-cycle odds of getting pregnant decline with age. The table below shows this as a ratio relative to the 21&ndash;24 age group, where the ratio is 1.00 (no decline). A ratio of 0.68 means your per-cycle odds have dropped to 68% of the baseline &mdash; so instead of 23%, you'd have about a 15.6% chance each cycle.
-      </p>
-      <p>
-        The model uses two different curves depending on whether you've been pregnant before:
+        Your per-cycle odds of getting pregnant decline with age. The model uses two different curves depending on whether you've been pregnant before:
       </p>
       <table>
         <thead>
           <tr><th>Age group</th><th>Never been pregnant</th><th>Been pregnant before</th></tr>
         </thead>
         <tbody>
-          <tr><td>21&ndash;24</td><td>1.00 (23.0%)</td><td>1.00 (23.0%)</td></tr>
-          <tr><td>25&ndash;27</td><td>0.89 (20.5%)</td><td>0.93 (21.4%)</td></tr>
-          <tr><td>28&ndash;30</td><td>0.88 (20.2%)</td><td>0.89 (20.5%)</td></tr>
-          <tr><td>31&ndash;33</td><td>0.79 (18.2%)</td><td>0.93 (21.4%)</td></tr>
-          <tr><td>34&ndash;36</td><td>0.68 (15.6%)</td><td>0.96 (22.1%)</td></tr>
-          <tr><td>37&ndash;39</td><td>0.51 (11.7%)</td><td>0.70 (16.1%)</td></tr>
-          <tr><td>40&ndash;45</td><td>0.20 (4.6%)</td><td>0.48 (11.0%)</td></tr>
+          <tr><td>18&ndash;24</td><td>23.0%</td><td>23.0%</td></tr>
+          <tr><td>25&ndash;27</td><td>20.2%</td><td>21.2%</td></tr>
+          <tr><td>28&ndash;30</td><td>18.4%</td><td>21.9%</td></tr>
+          <tr><td>31&ndash;33</td><td>19.3%</td><td>20.2%</td></tr>
+          <tr><td>34&ndash;36</td><td>15.6%</td><td>22.1%</td></tr>
+          <tr><td>37&ndash;39</td><td>11.7%</td><td>16.1%</td></tr>
+          <tr><td>40&ndash;45</td><td>4.6%</td><td>11.0%</td></tr>
         </tbody>
       </table>
       <p>
-        <strong>Why the difference?</strong> &ldquo;Been pregnant before&rdquo; includes any prior pregnancy &mdash; even ones that ended in miscarriage, not just live births. Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant &mdash; a 35-year-old who has been pregnant before has about 22% odds per cycle, versus about 16% for someone who hasn't.
+        <strong>Why the difference?</strong> Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy, regardless of whether the pregnancy resulted in a live birth or miscarriage. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant. A 35-year-old who has been pregnant before has about 22% odds per cycle, versus about 16% for someone who hasn't.
       </p>
       <p>
-        Note that male age does not meaningfully affect conception odds after controlling for female age &mdash; it only factors into miscarriage risk (see Section 4).
+        In our model, if a virtual couple has had a live birth, they are considered to have been pregnant before for the remainder of the simulation.
+      </p>
+      <p>
+        Note that male age does not meaningfully affect conception odds after controlling for female age. Our model only factors male age into miscarriage risk (see Section 4).
       </p>
 
       <!-- 3. Miscarriage -->
@@ -441,7 +444,7 @@
         </tbody>
       </table>
       <p>
-        Our model uses the same core simulation approach and matches Habbema's benchmark cutoff ages within &plusmn;1.5 years, but extends it in several ways:
+        Our model uses the same core simulation approach and matches Habbema's benchmark cutoff ages within &plusmn;2 years, but extends it in several ways:
       </p>
 
       <h3>Newer miscarriage data</h3>
@@ -504,6 +507,13 @@
       </p>
       <p>
         The data comes primarily from North American and Northern European populations. Results may not apply equally across all backgrounds.
+      </p>
+      <h3>About the creator</h3>
+      <p>
+        Fertility Forecaster was built by a software engineer, not a fertility researcher or statistician. I have no professional background in reproductive medicine or statistics beyond two college-level statistics courses taken as part of a computer science degree, plus eight years of professional software engineering experience. Mostly, I'm a mom who wished this type of information had been available when I was in my 20s and trying to figure out whether to freeze my eggs, when to start trying, and how to think about the tradeoffs.
+      </p>
+      <p>
+        This model has not been peer reviewed. The source code and methodology are available open source at <a href="https://github.com/joyceyan/fertility-forecaster">github.com/joyceyan/fertility-forecaster</a> so that others can inspect, critique, and improve it.
       </p>
       <div class="note">
         This tool is not medical advice. Please consult a healthcare provider for a personalized fertility assessment.

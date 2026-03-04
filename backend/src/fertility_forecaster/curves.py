@@ -6,10 +6,11 @@ import numpy as np
 
 from .models import SmokingStatus
 
-# Wesselink et al. 2017 fecundity ratios at age bracket midpoints
-_FECUNDABILITY_AGES = np.array([22.5, 26, 29, 32, 35, 38, 42.5], dtype=float)
-_FECUNDABILITY_FR_NULLIGRAVID = np.array([1.00, 0.89, 0.88, 0.79, 0.68, 0.51, 0.20], dtype=float)
-_FECUNDABILITY_FR_GRAVID = np.array([1.00, 0.93, 0.89, 0.93, 0.96, 0.70, 0.48], dtype=float)
+# Wesselink et al. 2017 Table 3 fecundity ratios at age bracket midpoints.
+# 18-20 assumed equal to the 21-24 reference group (FR = 1.00).
+_FECUNDABILITY_AGES = np.array([21, 26, 29, 32, 35, 38, 42.5], dtype=float)
+_FECUNDABILITY_FR_NULLIGRAVID = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20], dtype=float)
+_FECUNDABILITY_FR_GRAVID = np.array([1.00, 0.92, 0.95, 0.88, 0.96, 0.70, 0.48], dtype=float)
 # Base rate of 0.23 per cycle at ages 20-30, following Habbema et al. 2015 / Leridon model.
 # The PRESTO cohort (Wesselink 2017) reports ~0.25 but this likely reflects upward
 # selection bias from the study enrollment criteria.

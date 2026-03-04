@@ -17,6 +17,7 @@ interface Props {
   userAge: number;
   showIvf: boolean;
   showFrozen: boolean;
+  frozenLabel?: string;
 }
 
 export default function CompletionChart({
@@ -24,6 +25,7 @@ export default function CompletionChart({
   userAge,
   showIvf,
   showFrozen,
+  frozenLabel = "With Frozen Reserves",
 }: Props) {
   // Merge scenario data into one array keyed by starting_age
   const merged = useMemo(
@@ -68,7 +70,7 @@ export default function CompletionChart({
                 ? "Natural"
                 : name === "with_ivf"
                   ? "With IVF"
-                  : "With Frozen",
+                  : frozenLabel,
             ]}
             labelFormatter={(label: number) => `Age ${label}`}
           />
@@ -80,7 +82,7 @@ export default function CompletionChart({
                 ? "Natural"
                 : value === "with_ivf"
                   ? "With IVF"
-                  : "With Frozen Reserves"
+                  : frozenLabel
             }
           />
 

@@ -379,12 +379,15 @@ class TestSmokingEffect:
 
 class TestConsecutiveMiscarriages:
     def test_high_prior_miscarriages_reduce_rate(self):
-        """Many consecutive prior miscarriages should reduce completion rate."""
+        """Many consecutive prior miscarriages should reduce completion rate.
+        Both women have 1 prior live birth (so both are gravid, using the same
+        fecundability curve) — this isolates the miscarriage effect from the
+        gravid/nulligravid curve difference."""
         no_mc = run_simulation(
-            SimulationParams(female_age=30, desired_children=1, prior_miscarriages=0)
+            SimulationParams(female_age=35, desired_children=2, prior_live_births=1, prior_miscarriages=0)
         )
         high_mc = run_simulation(
-            SimulationParams(female_age=30, desired_children=1, prior_miscarriages=3)
+            SimulationParams(female_age=35, desired_children=2, prior_live_births=1, prior_miscarriages=3)
         )
         assert no_mc.completion_rate >= high_mc.completion_rate
 

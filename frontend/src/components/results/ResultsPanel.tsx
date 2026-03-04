@@ -3,21 +3,59 @@ import type { FormState, SweepResponse } from "../../api/types";
 import { generateHeroInsight, generateDetailedInsights } from "../../utils/insights";
 import HeroInsight from "./HeroInsight";
 import CompletionChart from "./CompletionChart";
+import WhatIfFreezeCard from "./WhatIfFreezeCard";
 import DetailedInsights from "./DetailedInsights";
+
+interface WhatIfFreeze {
+  enabled: boolean;
+  numEggs: number;
+}
 
 interface Props {
   form: FormState;
   data: SweepResponse;
   loading?: boolean;
+  whatIfFreeze: WhatIfFreeze;
+  onWhatIfToggle: (enabled: boolean) => void;
+  onWhatIfNumEggs: (numEggs: number) => void;
+  onWhatIfApply: () => void;
 }
 
-export default memo(function ResultsPanel({ form, data, loading }: Props) {
+export default memo(function ResultsPanel({
+  form,
+  data,
+  loading,
+  whatIfFreeze,
+  onWhatIfToggle,
+  onWhatIfNumEggs,
+  onWhatIfApply,
+}: Props) {
   const heroInsight = generateHeroInsight(form, data);
-  const detailedInsights = generateDetailedInsights(form, data);
 
-  const showIvf = form.ivf_willingness !== "no";
   const hasFrozen =
     form.frozen_egg_batches.length > 0 || form.frozen_embryo_batches.length > 0;
+  const showFrozen = hasFrozen || whatIfFreeze.enabled;
+
+  const frozenLabel = whatIfFreeze.enabled
+    ? hasFrozen
+      ? "With frozen reserves + new freeze"
+      : `With egg freeze at ${form.user_age}`
+    : "With Frozen Reserves";
+
+  // Build effective form with hypothetical batch for insights
+  const effectiveForm: FormState = whatIfFreeze.enabled
+    ? {
+        ...form,
+        frozen_egg_batches: [
+          ...form.frozen_egg_batches,
+          { age_at_freeze: form.user_age, num_eggs: whatIfFreeze.numEggs },
+        ],
+      }
+    : form;
+
+  const detailedInsights = generateDetailedInsights(effectiveForm, data);
+
+  const showIvf = form.ivf_willingness !== "no";
 
   return (
     <div className="relative">
@@ -38,7 +76,16 @@ export default memo(function ResultsPanel({ form, data, loading }: Props) {
           data={data}
           userAge={form.user_age}
           showIvf={showIvf}
-          showFrozen={hasFrozen}
+          showFrozen={showFrozen}
+          frozenLabel={frozenLabel}
+        />
+        <WhatIfFreezeCard
+          age={form.user_age}
+          enabled={whatIfFreeze.enabled}
+          numEggs={whatIfFreeze.numEggs}
+          onToggle={onWhatIfToggle}
+          onNumEggsChange={onWhatIfNumEggs}
+          onApply={onWhatIfApply}
         />
         <DetailedInsights insights={detailedInsights} />
       </div>

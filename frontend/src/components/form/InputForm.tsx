@@ -215,7 +215,7 @@ export default function InputForm({ form, onChange, onSubmit, loading }: Props) 
 
             <div>
               <label className="mb-1 block text-xs font-medium text-stone-500">
-                Prior miscarriages
+                Consecutive miscarriages since last live birth
               </label>
               <input
                 type="number"

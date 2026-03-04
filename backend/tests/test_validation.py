@@ -2,15 +2,6 @@
 
 These tests verify that our simulation produces results broadly consistent
 with the literature.
-
-Phase 1e/1f/1g calibration changes:
-1. Added age-dependent permanent sterility (Habbema/Leridon model)
-2. Reduced base fecundability from 0.25 to 0.23 (correcting PRESTO selection bias)
-3. Capped gravid FR at 1.20x nulligravid (limiting healthy survivor bias)
-4. Fixed gravid curve usage — nulligravid for all simulated children
-5. Individual fecundability heterogeneity (Beta draws with concentration=5.0)
-
-After Phase 1g, the 90% cutoff ages match Habbema within ±1 year.
 """
 
 import pytest
