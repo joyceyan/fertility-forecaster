@@ -69,7 +69,7 @@ def run_simulation(
     waiting_months = np.zeros(N, dtype=int)
     on_ivf = np.zeros(N, dtype=bool)
     total_ivf_cycles_used = np.zeros(N, dtype=int)
-    ivf_exhausted = np.zeros(N, dtype=bool)  # permanent: all IVF cycles used up
+    ivf_exhausted = np.zeros(N, dtype=bool)  # per-child: resets after each live birth
 
     # Gravidity: fixed at initialization based on user-reported history.
     # When no prior pregnancies, use nulligravid curve for ALL simulated children
@@ -314,7 +314,9 @@ def run_simulation(
             using_frozen_egg[live_birth] = False
             current_embryo_batch_idx[live_birth] = -1
             current_egg_batch_idx[live_birth] = -1
-            # NOTE: total_ivf_cycles_used is NOT reset — it's a lifetime cap
+            # Reset IVF cycles for next child — cap is per-child (Habbema 2015)
+            total_ivf_cycles_used[live_birth] = 0
+            ivf_exhausted[live_birth] = False
             consecutive_miscarriages[live_birth] = 0
 
             # Deactivate completed couples
@@ -335,7 +337,7 @@ def run_simulation(
         no_conception = trying & ~conceived
         cycles_tried[no_conception] += 1
 
-        # IVF cycle tracking — lifetime cap, no re-attempts
+        # IVF cycle tracking — per-child cap, resets after live birth
         ivf_no_conceive = no_conception & on_ivf
         total_ivf_cycles_used[ivf_no_conceive] += 1
         newly_exhausted = ivf_no_conceive & (total_ivf_cycles_used >= params.max_ivf_cycles)

@@ -135,7 +135,7 @@
         <li>A random draw determines whether conception occurs.</li>
         <li>If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates. This is further adjusted for any miscarriage history and male partner age, if applicable.</li>
         <li>If the couple fails to conceive naturally for a configurable number of cycles (default 12) and is open to IVF, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF.</li>
-        <li>If the couple exhausts all fresh IVF attempts (default 3 lifetime cycles), they are permanently limited to natural conception for the remainder of the simulation. Frozen embryo and frozen egg cycles do not count toward this cap.</li>
+        <li>If the couple exhausts all fresh IVF attempts for that child (default 3 cycles per child), they return to natural conception. The IVF cycle counter resets after each live birth, so the couple can try IVF again for subsequent children. Frozen embryo and frozen egg cycles do not count toward this cap.</li>
         <li>The loop repeats until the couple achieves their desired number of children or the woman turns 45.</li>
       </ol>
       <p>After simulating all 10,000 couples, the model reports what percentage achieved the desired family size.</p>
@@ -187,16 +187,14 @@
       <h3>3. Miscarriage Rates by Age</h3>
       <p class="source-tag"><a href="https://doi.org/10.1136/bmj.l869">Magnus et al., 2019</a></p>
       <p>
-        Not every pregnancy results in a live birth. Miscarriage risk varies with age and is lowest in the late 20s:
+        Not every pregnancy results in a live birth. Miscarriage risk varies with age:
       </p>
       <table>
         <thead>
           <tr><th>Age group</th><th>Miscarriage rate</th></tr>
         </thead>
         <tbody>
-          <tr><td>&lt; 20</td><td>15.8%</td></tr>
-          <tr><td>20&ndash;24</td><td>11.3%</td></tr>
-          <tr><td>25&ndash;29</td><td>9.8%</td></tr>
+          <tr><td>&lt; 29</td><td>9.8%</td></tr>
           <tr><td>30&ndash;34</td><td>10.8%</td></tr>
           <tr><td>35&ndash;39</td><td>16.7%</td></tr>
           <tr><td>40&ndash;44</td><td>32.2%</td></tr>
@@ -360,7 +358,7 @@
         </tbody>
       </table>
       <p>
-        Each IVF cycle takes about 2 months. By default, the model allows up to 3 fresh IVF cycles across your entire reproductive timeline.
+        Each IVF cycle takes about 2 months. By default, the model allows up to 3 fresh IVF cycles per child. The counter resets after each live birth.
       </p>
 
       <!-- 11. Frozen Eggs -->
@@ -485,7 +483,7 @@
         <li>Only 3 IVF cycles are attempted per child.</li>
       </ul>
       <p>
-        In our model, all of these are user-configurable &mdash; you can set the minimum spacing between births, how many months of natural trying before IVF, and how many total IVF cycles you're willing to attempt. This lets you model scenarios closer to your actual plans rather than relying on the study's assumptions.
+        In our model, all of these are user-configurable &mdash; you can set the minimum spacing between births, how many months of natural trying before IVF, and how many IVF cycles per child you're willing to attempt. This lets you model scenarios closer to your actual plans rather than relying on the study's assumptions.
       </p>
 
       <!-- Factors Not Included -->

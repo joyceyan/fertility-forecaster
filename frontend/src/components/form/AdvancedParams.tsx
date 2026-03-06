@@ -107,7 +107,7 @@ export default function AdvancedParams({ form, onChange }: Props) {
         <>
           <div>
             <label className="mb-1 block text-sm font-medium text-stone-600">
-              Max IVF cycles (lifetime)
+              Max IVF cycles per child
             </label>
             <input
               type="number"

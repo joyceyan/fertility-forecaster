@@ -92,17 +92,17 @@ class TestFecundabilityGravid:
 
 class TestMiscarriageCurve:
     def test_exact_known_points(self):
-        ages = np.array([17.5, 22.0, 27.0, 32.0, 37.0, 42.0, 47.5])
+        ages = np.array([18.0, 27.0, 32.0, 37.0, 42.0, 47.5])
         rates = miscarriage_curve(ages)
         np.testing.assert_allclose(
-            rates, [0.158, 0.113, 0.098, 0.108, 0.167, 0.322, 0.536], atol=1e-6
+            rates, [0.098, 0.098, 0.108, 0.167, 0.322, 0.536], atol=1e-6
         )
 
-    def test_not_monotonically_increasing(self):
-        """Magnus 2019 data dips at 25-29 before rising."""
-        ages = np.array([22.0, 27.0])
+    def test_flat_below_25(self):
+        """Curve is flat at 9.8% for all ages under 25."""
+        ages = np.array([18.0, 20.0, 22.0, 24.0, 27.0])
         rates = miscarriage_curve(ages)
-        assert rates[1] < rates[0]  # dip at 25-29
+        np.testing.assert_allclose(rates, [0.098] * 5, atol=1e-6)
 
     def test_interpolation(self):
         rate = miscarriage_curve(np.array([30.0]))[0]
@@ -220,8 +220,8 @@ class TestApplyOddsRatio:
 
     def test_all_age_brackets_with_all_ors_bounded(self):
         """Miscarriage probability stays in [0,1] for all age × recurrent MC × male age combos."""
-        # Magnus 2019 miscarriage rates at bracket midpoints
-        mc_rates = np.array([0.158, 0.113, 0.098, 0.108, 0.167, 0.322, 0.536])
+        # Magnus 2019 miscarriage rates (flattened below 25)
+        mc_rates = np.array([0.098, 0.098, 0.108, 0.167, 0.322, 0.536])
         recurrent_ors = [1.0, 1.54, 2.21, 3.97]
         male_ors = [1.0, 2.09]
         for base in mc_rates:

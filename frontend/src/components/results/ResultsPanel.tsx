@@ -1,10 +1,9 @@
 import { memo } from "react";
 import type { FormState, SweepResponse } from "../../api/types";
-import { generateHeroInsight, generateDetailedInsights } from "../../utils/insights";
+import { generateHeroInsight } from "../../utils/insights";
 import HeroInsight from "./HeroInsight";
 import CompletionChart from "./CompletionChart";
 import WhatIfFreezeCard from "./WhatIfFreezeCard";
-import DetailedInsights from "./DetailedInsights";
 
 interface WhatIfFreeze {
   enabled: boolean;
@@ -42,19 +41,6 @@ export default memo(function ResultsPanel({
       : `With egg freeze at ${form.user_age}`
     : "With Frozen Reserves";
 
-  // Build effective form with hypothetical batch for insights
-  const effectiveForm: FormState = whatIfFreeze.enabled
-    ? {
-        ...form,
-        frozen_egg_batches: [
-          ...form.frozen_egg_batches,
-          { age_at_freeze: form.user_age, num_eggs: whatIfFreeze.numEggs },
-        ],
-      }
-    : form;
-
-  const detailedInsights = generateDetailedInsights(effectiveForm, data);
-
   const showIvf = form.ivf_willingness !== "no";
 
   return (
@@ -87,7 +73,6 @@ export default memo(function ResultsPanel({
           onNumEggsChange={onWhatIfNumEggs}
           onApply={onWhatIfApply}
         />
-        <DetailedInsights insights={detailedInsights} />
       </div>
     </div>
   );

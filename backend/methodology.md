@@ -16,7 +16,7 @@ At a high level, the simulation runs a loop for each virtual couple:
 2. Each menstrual cycle (~1 month), the model calculates a personalized per-cycle conception probability by applying age-ratio decline to the couple's individual fecundability, then multiplying by BMI and smoking adjustments. Permanently sterile couples get zero probability.
 3. A random draw determines whether conception occurs.
 4. If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates adjusted for recurrent miscarriage history and male partner age.
-5. If the couple fails to conceive naturally for `cycles_before_ivf` consecutive cycles (default 12) and is open to assisted reproduction, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF — up to `max_ivf_cycles` fresh IVF cycles (default 3) across the couple's lifetime. Frozen embryo and frozen egg cycles do not count toward this cap.
+5. If the couple fails to conceive naturally for `cycles_before_ivf` consecutive cycles (default 12) and is open to assisted reproduction, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF — up to `max_ivf_cycles` fresh IVF cycles per child (default 3). The counter resets after each live birth. Frozen embryo and frozen egg cycles do not count toward this cap.
 6. The loop repeats until the couple achieves their desired number of children or the woman turns 45.
 
 After simulating all 10,000 couples, the model reports what percentage achieved the desired family size, how long it took, and what proportion of successes came from each conception method (natural, fresh IVF, frozen egg IVF, frozen embryo transfer).
@@ -87,15 +87,17 @@ The population-mean fecundability at the starting age is used as the center of t
 
 **Key data points (miscarriage rate by age, adjusted for induced abortions):**
 
-| Age group | Miscarriage rate |
-|-----------|-----------------|
-| < 20      | 15.8%           |
-| 20-24     | 11.3%           |
-| 25-29     | 9.8%            |
-| 30-34     | 10.8%           |
-| 35-39     | 16.7%           |
-| 40-44     | 32.2%           |
-| 45+       | 53.6%           |
+| Age group | Magnus rate | Model rate |
+|-----------|-------------|------------|
+| < 20      | 15.8%       | 9.8%       |
+| 20-24     | 11.3%       | 9.8%       |
+| 25-29     | 9.8%        | 9.8%       |
+| 30-34     | 10.8%       | 10.8%      |
+| 35-39     | 16.7%       | 16.7%      |
+| 40-44     | 32.2%       | 32.2%      |
+| 45+       | 53.6%       | 53.6%      |
+
+**Flattening below age 25:** The Magnus study shows elevated miscarriage rates for women under 25 (15.8% at <20, 11.3% at 20-24). However, the study covers *all* recognized pregnancies in Norway, including unplanned ones. The authors note this elevated young-age risk may reflect "unrecognised social causes of miscarriage" (lifestyle factors, delayed prenatal care associated with unplanned pregnancies) rather than biology. Since our model targets women who are actively planning pregnancies, we flatten the curve below age 25 to the 25-29 baseline of 9.8%, removing the social-confounder artifact while preserving the well-established age-related rise after 30.
 
 The study also provides recurrent miscarriage risk, showing a strong pattern of increasing odds after consecutive losses:
 
@@ -276,7 +278,7 @@ After 12 months of unsuccessful trying, the model estimates the couple's expecte
 
 **How it's used in the model:** After `cycles_before_ivf` consecutive cycles of failed natural conception (default 12, configurable), if the user is open to assisted reproduction, the simulation switches to an assisted reproduction pathway. Frozen embryos are used first (if available), then frozen eggs (if available), then fresh IVF. Each IVF cycle takes approximately 2 months. The per-transfer success rate depends on the woman's current age at the time of the cycle. If the user has a BMI ≥ 30, the rate is further multiplied by 0.85 (Sermondade adjustment).
 
-**Lifetime IVF cap:** The couple may attempt up to `max_ivf_cycles` fresh IVF cycles total across their entire reproductive timeline (default 3). Once exhausted, IVF is permanently unavailable — the couple cannot re-qualify for IVF by trying naturally again. This reflects the clinical reality that most couples undergo a limited number of IVF cycles, consistent with the Habbema et al. 2015 modeling framework.
+**Per-child IVF cap:** The couple may attempt up to `max_ivf_cycles` fresh IVF cycles per child (default 3). The counter resets after each live birth, so a couple wanting 3 children could use up to 9 fresh IVF cycles total. This is consistent with the Habbema et al. 2015 modeling framework, which assumes "a course of three IVF cycles" per child.
 
 ---
 
@@ -362,7 +364,7 @@ The following parameters can be configured by the user:
 | `smoking_status` | never | Never, former, current occasional, current regular |
 | `ivf_willingness` | last_resort | "yes", "no", or "last_resort" |
 | `cycles_before_ivf` | 12 | Months of natural trying before IVF eligibility |
-| `max_ivf_cycles` | 3 | Lifetime cap on fresh IVF cycles |
+| `max_ivf_cycles` | 3 | Max fresh IVF cycles per child (resets after each live birth) |
 | `min_spacing_months` | 18 | Minimum months between births |
 | `prior_live_births` | 0 | Number of existing children |
 | `prior_miscarriages` | 0 | Consecutive miscarriages since last live birth (resets to 0 after each live birth; used to seed recurrent miscarriage risk) |

@@ -33,17 +33,17 @@ class FrozenEmbryoBatchIn(BaseModel):
 class SimulateRequest(BaseModel):
     female_age: float = Field(ge=18, le=45)
     desired_children: int = Field(ge=1, le=6)
-    male_age: float | None = None
-    bmi: float | None = None
-    acceptable_probability: float = 0.9
+    male_age: float | None = Field(default=None, ge=18, le=70)
+    bmi: float | None = Field(default=None, ge=10, le=70)
+    acceptable_probability: float = Field(default=0.9, ge=0.01, le=1.0)
     ivf_willingness: Literal["yes", "no", "last_resort"] = "no"
-    min_spacing_months: int = 18
+    min_spacing_months: int = Field(default=18, ge=6, le=60)
     prior_live_births: int = Field(default=0, ge=0)
     prior_miscarriages: int = Field(default=0, ge=0)
     cycles_tried: int = Field(default=0, ge=0)
-    cycles_before_ivf: int = 12
-    max_ivf_cycles: int = 3
-    smoking_status: str = "never"
+    cycles_before_ivf: int = Field(default=12, ge=1, le=60)
+    max_ivf_cycles: int = Field(default=3, ge=1, le=10)
+    smoking_status: Literal["never", "former", "current_occasional", "current_regular"] = "never"
     frozen_egg_batches: list[FrozenEggBatchIn] = Field(default_factory=list, max_length=5)
     frozen_embryo_batches: list[FrozenEmbryoBatchIn] = Field(
         default_factory=list, max_length=5
@@ -108,20 +108,20 @@ class SimulateRequest(BaseModel):
 class SweepRequest(BaseModel):
     age_range_start: float = Field(ge=18, le=45)
     age_range_end: float = Field(ge=18, le=45)
-    age_step: float = Field(default=1.0, gt=0, le=10)
+    age_step: float = Field(default=1.0, ge=0.5, le=10)
 
     desired_children: int = Field(ge=1, le=6)
-    male_age_offset: float | None = None
-    bmi: float | None = None
-    acceptable_probability: float = 0.9
+    male_age_offset: float | None = Field(default=None, ge=-20, le=20)
+    bmi: float | None = Field(default=None, ge=10, le=70)
+    acceptable_probability: float = Field(default=0.9, ge=0.01, le=1.0)
     ivf_willingness: Literal["yes", "no", "last_resort"] = "no"
-    min_spacing_months: int = 18
+    min_spacing_months: int = Field(default=18, ge=6, le=60)
     prior_live_births: int = Field(default=0, ge=0)
     prior_miscarriages: int = Field(default=0, ge=0)
     cycles_tried: int = Field(default=0, ge=0)
-    cycles_before_ivf: int = 12
-    max_ivf_cycles: int = 3
-    smoking_status: str = "never"
+    cycles_before_ivf: int = Field(default=12, ge=1, le=60)
+    max_ivf_cycles: int = Field(default=3, ge=1, le=10)
+    smoking_status: Literal["never", "former", "current_occasional", "current_regular"] = "never"
     frozen_egg_batches: list[FrozenEggBatchIn] = Field(default_factory=list, max_length=5)
     frozen_embryo_batches: list[FrozenEmbryoBatchIn] = Field(
         default_factory=list, max_length=5

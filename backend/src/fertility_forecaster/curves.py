@@ -20,9 +20,13 @@ _BASE_FECUNDABILITY = 0.23
 # corroborates this: women who have never conceived by their late 30s likely
 # include those with lower underlying fertility.
 
-# Magnus et al. 2019 miscarriage rates
-_MISCARRIAGE_AGES = np.array([17.5, 22.0, 27.0, 32.0, 37.0, 42.0, 47.5], dtype=float)
-_MISCARRIAGE_RATES = np.array([0.158, 0.113, 0.098, 0.108, 0.167, 0.322, 0.536], dtype=float)
+# Magnus et al. 2019 miscarriage rates, flattened below age 25.
+# The original study shows elevated rates for women <25 (15.8% at <20, 11.3% at
+# 20-24), but this likely reflects social confounders (unplanned pregnancies,
+# lifestyle factors) rather than biology. Our target users are actively planning
+# pregnancies, so we use the 25-29 rate (9.8%) as a floor for all ages under 25.
+_MISCARRIAGE_AGES = np.array([18.0, 27.0, 32.0, 37.0, 42.0, 47.5], dtype=float)
+_MISCARRIAGE_RATES = np.array([0.098, 0.098, 0.108, 0.167, 0.322, 0.536], dtype=float)
 
 OOCYTE_SURVIVAL_RATE = 0.785  # Hirsch et al. 2024
 

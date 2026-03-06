@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 import logging
 import os
 import time
@@ -10,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .curves import (
@@ -37,15 +39,58 @@ from .simulation import run_simulation
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Fertility Forecaster API", version="0.1.0")
+_ALLOWED_ORIGINS_ENV = os.environ.get("ALLOWED_ORIGINS", "").strip()
+if _ALLOWED_ORIGINS_ENV:
+    _ALLOWED_ORIGINS = [o.strip() for o in _ALLOWED_ORIGINS_ENV.split(",") if o.strip()]
+else:
+    # In production the frontend is served same-origin via StaticFiles, so CORS
+    # isn't needed. Default to common local dev origins for development.
+    _ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+app = FastAPI(
+    title="Fertility Forecaster API",
+    version="0.1.0",
+    docs_url="/docs" if os.environ.get("ENABLE_DOCS") else None,
+    redoc_url="/redoc" if os.environ.get("ENABLE_DOCS") else None,
+    openapi_url="/openapi.json" if os.environ.get("ENABLE_DOCS") else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
+
+# Simple in-memory rate limiter: max requests per IP within a sliding window.
+_RATE_LIMIT = int(os.environ.get("RATE_LIMIT", "20"))  # requests per window
+_RATE_WINDOW = int(os.environ.get("RATE_WINDOW", "60"))  # seconds
+_request_log: dict[str, collections.deque] = {}
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Rate-limit POST endpoints by client IP."""
+    if request.method == "POST":
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        timestamps = _request_log.setdefault(client_ip, collections.deque())
+        # Discard timestamps outside the window
+        while timestamps and timestamps[0] < now - _RATE_WINDOW:
+            timestamps.popleft()
+        if len(timestamps) >= _RATE_LIMIT:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please try again later."},
+            )
+        timestamps.append(now)
+    return await call_next(request)
 
 
 @app.middleware("http")

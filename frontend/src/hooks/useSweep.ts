@@ -13,8 +13,10 @@ interface UseSweepResult {
 }
 
 function formToRequest(form: FormState): SweepRequest {
+  const hasHistory = form.prior_live_births > 0 || form.prior_miscarriages > 0;
+  const sweepStart = hasHistory ? Math.max(SWEEP_AGE_START, form.user_age) : SWEEP_AGE_START;
   return {
-    age_range_start: SWEEP_AGE_START,
+    age_range_start: sweepStart,
     age_range_end: SWEEP_AGE_END,
     age_step: SWEEP_AGE_STEP,
     desired_children: form.desired_children,
