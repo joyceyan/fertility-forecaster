@@ -115,21 +115,23 @@ class TestMiscarriageCurve:
 
 
 class TestIVFSuccessRate:
+    """SART 2023 fresh blast + cleavage pooled, weighted by transfers."""
+
     def test_age_brackets(self):
-        assert ivf_success_rate(np.array([30.0]))[0] == 0.40
-        assert ivf_success_rate(np.array([36.0]))[0] == 0.30
-        assert ivf_success_rate(np.array([39.0]))[0] == 0.20
-        assert ivf_success_rate(np.array([41.0]))[0] == 0.12
-        assert ivf_success_rate(np.array([43.0]))[0] == 0.05
-        assert ivf_success_rate(np.array([46.0]))[0] == 0.02
+        assert ivf_success_rate(np.array([30.0]))[0] == 0.405
+        assert ivf_success_rate(np.array([36.0]))[0] == 0.317
+        assert ivf_success_rate(np.array([39.0]))[0] == 0.213
+        assert ivf_success_rate(np.array([41.0]))[0] == 0.110
+        assert ivf_success_rate(np.array([43.0]))[0] == 0.04
+        assert ivf_success_rate(np.array([46.0]))[0] == 0.01
 
     def test_boundary_35(self):
-        assert ivf_success_rate(np.array([34.9]))[0] == 0.40
-        assert ivf_success_rate(np.array([35.0]))[0] == 0.30
+        assert ivf_success_rate(np.array([34.9]))[0] == 0.405
+        assert ivf_success_rate(np.array([35.0]))[0] == 0.317
 
     def test_vectorized(self):
         ages = np.array([30, 36, 39, 42, 44, 46], dtype=float)
-        expected = np.array([0.40, 0.30, 0.20, 0.12, 0.05, 0.02])
+        expected = np.array([0.405, 0.317, 0.213, 0.110, 0.04, 0.01])
         np.testing.assert_allclose(ivf_success_rate(ages), expected)
 
 
@@ -147,16 +149,18 @@ class TestFrozenEggRate:
 
 
 class TestFrozenEmbryoTransferRate:
+    """SART 2023 frozen blast + cleavage (non-PGT) pooled, weighted by transfers."""
+
     def test_age_brackets(self):
-        assert frozen_embryo_transfer_rate(np.array([30.0]))[0] == 0.40
-        assert frozen_embryo_transfer_rate(np.array([36.0]))[0] == 0.30
-        assert frozen_embryo_transfer_rate(np.array([39.0]))[0] == 0.20
-        assert frozen_embryo_transfer_rate(np.array([41.5]))[0] == 0.12
-        assert frozen_embryo_transfer_rate(np.array([44.0]))[0] == 0.05
+        assert frozen_embryo_transfer_rate(np.array([30.0]))[0] == 0.462
+        assert frozen_embryo_transfer_rate(np.array([36.0]))[0] == 0.403
+        assert frozen_embryo_transfer_rate(np.array([39.0]))[0] == 0.331
+        assert frozen_embryo_transfer_rate(np.array([41.5]))[0] == 0.226
+        assert frozen_embryo_transfer_rate(np.array([44.0]))[0] == 0.141
 
     def test_vectorized(self):
         ages = np.array([30, 36, 39, 42, 44], dtype=float)
-        expected = np.array([0.40, 0.30, 0.20, 0.12, 0.05])
+        expected = np.array([0.462, 0.403, 0.331, 0.226, 0.141])
         np.testing.assert_allclose(frozen_embryo_transfer_rate(ages), expected)
 
 
@@ -187,7 +191,7 @@ class TestApplyOddsRatio:
         (0.10, 3.97, 0.306),
         (0.322, 2.21, 0.512),
         (0.322, 3.97, 0.654),
-        (0.536, 2.09, 0.707),
+        (0.536, 1.43, 0.623),
     ])
     def test_precise_conversion(self, base, or_val, expected):
         """Verify OR-to-probability conversion matches canonical formula."""
@@ -197,8 +201,8 @@ class TestApplyOddsRatio:
 
     def test_high_base_high_or_stays_below_one(self):
         """Critical: high base prob + high OR must NOT exceed 1.0."""
-        # 45+ woman (base ~0.536) with male age OR 2.09
-        result = float(apply_odds_ratio(0.536, 2.09))
+        # 45+ woman (base ~0.536) with male age OR 1.43
+        result = float(apply_odds_ratio(0.536, 1.43))
         assert result < 1.0
         # 42yo (base ~0.322) with recurrent miscarriage OR 3.97
         result = float(apply_odds_ratio(0.322, 3.97))
@@ -207,7 +211,7 @@ class TestApplyOddsRatio:
     def test_stacking_equivalent_to_combined_odds(self):
         """Sequential apply_odds_ratio is equivalent to multiplying ORs on odds scale."""
         base = 0.322
-        or1, or2 = 2.21, 2.09
+        or1, or2 = 2.21, 1.43
         # Sequential application
         p1 = float(apply_odds_ratio(base, or1))
         p_sequential = float(apply_odds_ratio(p1, or2))
@@ -223,7 +227,7 @@ class TestApplyOddsRatio:
         # Magnus 2019 miscarriage rates (flattened below 25)
         mc_rates = np.array([0.098, 0.098, 0.108, 0.167, 0.322, 0.536])
         recurrent_ors = [1.0, 1.54, 2.21, 3.97]
-        male_ors = [1.0, 2.09]
+        male_ors = [1.0, 1.15, 1.23, 1.43]
         for base in mc_rates:
             for rec_or in recurrent_ors:
                 p = float(apply_odds_ratio(base, rec_or))
@@ -258,13 +262,21 @@ class TestRecurrentMiscarriageOR:
 
 
 class TestMaleAgeMiscarriageOR:
-    def test_under_40(self):
-        result = male_age_miscarriage_or(np.array([30.0, 39.9]))
-        np.testing.assert_allclose(result, [1.0, 1.0])
+    def test_under_35(self):
+        result = male_age_miscarriage_or(np.array([25.0, 30.0, 34.9]))
+        np.testing.assert_allclose(result, [1.0, 1.0, 1.0])
 
-    def test_40_and_over(self):
-        result = male_age_miscarriage_or(np.array([40.0, 50.0]))
-        np.testing.assert_allclose(result, [2.09, 2.09])
+    def test_35_to_39(self):
+        result = male_age_miscarriage_or(np.array([35.0, 39.9]))
+        np.testing.assert_allclose(result, [1.15, 1.15])
+
+    def test_40_to_44(self):
+        result = male_age_miscarriage_or(np.array([40.0, 44.9]))
+        np.testing.assert_allclose(result, [1.23, 1.23])
+
+    def test_45_and_over(self):
+        result = male_age_miscarriage_or(np.array([45.0, 50.0]))
+        np.testing.assert_allclose(result, [1.43, 1.43])
 
 
 class TestBMIFecundabilityFR:

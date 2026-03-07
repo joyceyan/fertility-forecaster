@@ -284,10 +284,10 @@ class TestMaleAging:
     def test_male_aging_transition_during_simulation(self):
         """Male starting at 38 should cross the age-40 threshold during simulation.
 
-        Male OR is 1.0 before 40, 2.09 after 40. A male starting at 38 should
-        transition to the higher OR after ~2 years of simulation.
+        Male OR is 1.0 before 35, 1.15 at 35-39, 1.23 at 40-44, 1.43 at 45+.
+        A male starting at 38 should transition to the higher OR after ~2 years.
         """
-        # Male at 38: first 2 years no penalty, then 2.09 OR kicks in
+        # Male at 38: starts with 1.15 OR, then 1.23 OR kicks in at 40
         result_38 = run_simulation(
             SimulationParams(female_age=32, desired_children=2, male_age=38.0)
         )
@@ -478,7 +478,7 @@ class TestNumericalInvariants:
             miscarriage_curve,
             recurrent_miscarriage_or,
         )
-        # Worst case: age 47.5 (base=0.536), 5 consecutive miscarriages (OR=3.97), male age 50 (OR=2.09)
+        # Worst case: age 47.5 (base=0.536), 5 consecutive miscarriages (OR=3.97), male age 50 (OR=1.43)
         base = float(miscarriage_curve(np.array([47.5]))[0])
         p = float(apply_odds_ratio(base, float(recurrent_miscarriage_or(np.array([5]))[0])))
         p = float(apply_odds_ratio(p, float(male_age_miscarriage_or(np.array([50.0]))[0])))

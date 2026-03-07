@@ -30,6 +30,12 @@ _MISCARRIAGE_RATES = np.array([0.098, 0.098, 0.108, 0.167, 0.322, 0.536], dtype=
 
 OOCYTE_SURVIVAL_RATE = 0.785  # Hirsch et al. 2024
 
+# Pooled ART miscarriage rate (all ages).
+# Used for timeline simulation only — IVF live birth rates already account for
+# miscarriage, so this is only used to determine whether a failed IVF conception
+# adds a 3-month recovery delay before the next cycle.
+ART_MISCARRIAGE_RATE = 0.15
+
 # Age-dependent cumulative probability of permanent sterility
 # From Habbema et al. 2015 / Leridon model
 _STERILITY_AGES = np.array([20, 25, 30, 35, 38, 40, 42, 45], dtype=float)
@@ -117,13 +123,25 @@ def recurrent_miscarriage_or(consecutive_miscarriages: np.ndarray) -> np.ndarray
 
 
 def male_age_miscarriage_or(male_ages: np.ndarray) -> np.ndarray:
-    """Odds ratio for miscarriage based on male age. 1.0 if <40, 2.09 if >=40."""
+    """Odds ratio for miscarriage based on male age (du Fossé et al. 2020).
+
+    1.0 if <35, 1.15 if 35-39, 1.23 if 40-44, 1.43 if >=45.
+    """
     male_ages = np.asarray(male_ages, dtype=float)
-    return np.where(male_ages >= 40, 2.09, 1.0)
+    return np.where(
+        male_ages >= 45, 1.43,
+        np.where(male_ages >= 40, 1.23,
+                 np.where(male_ages >= 35, 1.15, 1.0))
+    )
 
 
 def ivf_success_rate(ages: np.ndarray) -> np.ndarray:
-    """Per-transfer live birth rate for fresh IVF, by female age at transfer."""
+    """Per-transfer live birth rate for fresh IVF, by female age at transfer.
+
+    Source: SART 2023 — fresh blastocyst + fresh cleavage (non-PGT-A),
+    pooled across SET and MET, weighted by number of transfers.
+    43-44 and 45+ are extrapolated from the SART >42 bucket (3.6% pooled).
+    """
     ages = np.asarray(ages, dtype=float)
     conditions = [
         ages < 35,
@@ -133,7 +151,7 @@ def ivf_success_rate(ages: np.ndarray) -> np.ndarray:
         (ages >= 43) & (ages < 45),
         ages >= 45,
     ]
-    choices = [0.40, 0.30, 0.20, 0.12, 0.05, 0.02]
+    choices = [0.405, 0.317, 0.213, 0.110, 0.04, 0.01]
     return np.select(conditions, choices)
 
 
@@ -151,7 +169,11 @@ def frozen_egg_per_oocyte_rate(retrieval_ages: np.ndarray) -> np.ndarray:
 
 
 def frozen_embryo_transfer_rate(creation_ages: np.ndarray) -> np.ndarray:
-    """Per-transfer live birth rate for frozen embryo transfer, by age at creation."""
+    """Per-transfer live birth rate for frozen embryo transfer, by age at creation.
+
+    Source: SART 2023 — frozen blastocyst + frozen cleavage (non-PGT-A),
+    pooled across SET and MET, weighted by number of transfers.
+    """
     creation_ages = np.asarray(creation_ages, dtype=float)
     conditions = [
         creation_ages < 35,
@@ -160,7 +182,7 @@ def frozen_embryo_transfer_rate(creation_ages: np.ndarray) -> np.ndarray:
         (creation_ages >= 41) & (creation_ages < 43),
         creation_ages >= 43,
     ]
-    choices = [0.40, 0.30, 0.20, 0.12, 0.05]
+    choices = [0.462, 0.403, 0.331, 0.226, 0.141]
     return np.select(conditions, choices)
 
 
@@ -168,8 +190,14 @@ def frozen_embryo_transfer_rate_pgt(creation_ages: np.ndarray) -> np.ndarray:
     """Per-transfer live birth rate for PGT-A tested (euploid) frozen embryos.
 
     Source: Jiang et al. 2025 (DOI: 10.1186/s13048-025-01602-9), n=1,037
-    single euploid transfers. 41-42 and 43+ extrapolated downward for
-    non-chromosomal factors (mitochondrial quality, epigenetics).
+    single euploid transfers, stratified by age at embryo creation.
+    41-42 and 43+ extrapolated downward for non-chromosomal factors
+    (mitochondrial quality, epigenetics).
+
+    We use Jiang 2025 rather than SART registry data because SART stratifies
+    by age at transfer, not age at creation. Since PGT-A embryos are often
+    banked for later use, the SART older-age brackets are inflated by embryos
+    created at younger ages.
     """
     creation_ages = np.asarray(creation_ages, dtype=float)
     conditions = [

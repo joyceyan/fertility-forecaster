@@ -114,15 +114,24 @@ The study also provides recurrent miscarriage risk, showing a strong pattern of 
 
 ### 4. Male Age and Miscarriage Risk
 
-**What it determines:** An additional adjustment to miscarriage rates when the male partner is 40 or older.
+**What it determines:** An additional adjustment to miscarriage rates when the male partner is 35 or older.
 
-**Source:** Boxem AJ, et al. "Preconception and Early-Pregnancy Body Mass Index in Women and Men, Time to Pregnancy, and Risk of Miscarriage." *JAMA Network Open*. 2024. [DOI: 10.1001/jamanetworkopen.2024.36157](https://doi.org/10.1001/jamanetworkopen.2024.36157)
+**Source:** du Fossé NA, et al. "Advanced paternal age is associated with an increased risk of spontaneous miscarriage: a systematic review and meta-analysis." *Human Reproduction Update*. 2020. [DOI: 10.1093/humupd/dmaa010](https://doi.org/10.1093/humupd/dmaa010)
 
-**About the study:** A population-based prospective cohort study (Generation R) of 3,604 women and their partners in Rotterdam, Netherlands, followed from preconception through birth.
+**About the study:** A systematic review and meta-analysis of 11 cohort studies and 8 case-control studies examining the association between paternal age and miscarriage risk. This is the most comprehensive synthesis of the evidence on this topic.
 
-**What we use:** Men aged ≥40 have approximately 2x the odds of their partner experiencing a miscarriage (OR ≈ 2.09 relative to men aged 30-34). Male age does not meaningfully affect per-cycle conception probability after controlling for female age (consistent with findings from Wesselink 2017).
+**What we use:** The meta-analysis reports age-bracket-specific odds ratios for miscarriage:
 
-**How it's used in the model:** If a male partner age is provided and is ≥40, the miscarriage OR of 2.09 is applied to the miscarriage probability (on the odds scale, stacked multiplicatively with any recurrent miscarriage adjustment). The male ages during the simulation alongside the female, so this adjustment activates when he crosses age 40 mid-simulation.
+| Male age | Odds ratio | 95% CI |
+|----------|-----------|--------|
+| < 35     | 1.00 (ref) | — |
+| 35–39    | 1.15      | 1.04–1.27 |
+| 40–44    | 1.23      | 1.06–1.43 |
+| ≥ 45     | 1.43      | 1.13–1.81 |
+
+We omit the 30–34 bracket (OR 1.04, 95% CI 0.90–1.21) as the effect is negligible and the confidence interval crosses 1.0. Male age does not meaningfully affect per-cycle conception probability after controlling for female age (consistent with findings from Wesselink 2017).
+
+**How it's used in the model:** If a male partner age is provided, the appropriate OR is applied based on his current age bracket (1.0 if <35, 1.15 if 35–39, 1.23 if 40–44, 1.43 if ≥45). The OR is applied to the miscarriage probability on the odds scale, stacked multiplicatively with any recurrent miscarriage adjustment. The male ages during the simulation alongside the female, so this adjustment activates when he crosses age thresholds mid-simulation.
 
 ---
 
@@ -261,22 +270,26 @@ After 12 months of unsuccessful trying, the model estimates the couple's expecte
 
 **What it determines:** Per-transfer live birth rates for IVF using the woman's current-age eggs.
 
-**Sources:**
-- CDC Assisted Reproductive Technology National Summary Reports (public dataset, updated annually)
-- UK Human Fertilisation and Embryology Authority (HFEA) dataset (250K+ treatment records, publicly downloadable)
+**Source:** [SART 2023 Outcome Tables](https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables) — fresh blastocyst + fresh cleavage (non-PGT-A), pooled across single-embryo and multiple-embryo transfers, weighted by number of transfers.
 
-**What we use (approximate per-transfer live birth rates by female age):**
+We pool both blastocyst-stage and cleavage-stage transfers to capture the full spectrum of fresh IVF outcomes. While blastocyst culture is the current standard of care in the US (~90% of transfers for <35) and increasingly in the UK (~75% as of 2023), cleavage-stage transfers still represent a meaningful proportion, particularly for older women with fewer embryos. Weighting by transfer count ensures each age bracket reflects the actual mix of protocols patients experience.
+
+The 43-44 and 45+ brackets are extrapolated from the SART >42 bucket (3.6% pooled LBR, 1,449 transfers).
+
+**What we use (per-transfer live birth rates by female age):**
 
 | Female age | LBR per transfer |
 |-----------|-----------------|
-| < 35      | 0.40            |
-| 35-37     | 0.30            |
-| 38-40     | 0.20            |
-| 41-42     | 0.12            |
-| 43-44     | 0.05            |
-| 45+       | 0.02            |
+| < 35      | 0.405           |
+| 35-37     | 0.317           |
+| 38-40     | 0.213           |
+| 41-42     | 0.110           |
+| 43-44     | 0.04            |
+| 45+       | 0.01            |
 
-**How it's used in the model:** After `cycles_before_ivf` consecutive cycles of failed natural conception (default 12, configurable), if the user is open to assisted reproduction, the simulation switches to an assisted reproduction pathway. Frozen embryos are used first (if available), then frozen eggs (if available), then fresh IVF. Each IVF cycle takes approximately 2 months. The per-transfer success rate depends on the woman's current age at the time of the cycle. If the user has a BMI ≥ 30, the rate is further multiplied by 0.85 (Sermondade adjustment).
+**How it's used in the model:** After `cycles_before_ivf` consecutive cycles of failed natural conception (default 12, configurable), if the user is open to assisted reproduction, the simulation switches to an assisted reproduction pathway. Frozen embryos are used first (if available), then frozen eggs (if available), then fresh IVF. Each IVF cycle takes approximately 4 months (following Habbema et al. 2015: "a course of three IVF cycles with 4-month intervals"). The per-transfer success rate depends on the woman's current age at the time of the cycle. If the user has a BMI ≥ 30, the rate is further multiplied by 0.85 (Sermondade adjustment).
+
+**ART miscarriage handling:** Since the SART live birth rates already account for miscarriage losses, the simulation does not apply age-dependent miscarriage rates to ART conceptions (which would double-count). Instead, each ART conception has a flat 15% chance of miscarriage (pooled across all ages) used solely for timeline simulation — if an ART pregnancy miscarries, the couple waits 3 months before the next cycle, reflecting real-world recovery time. The effective live birth rate per transfer remains as shown in the table above.
 
 **Per-child IVF cap:** The couple may attempt up to `max_ivf_cycles` fresh IVF cycles per child (default 3). The counter resets after each live birth, so a couple wanting 3 children could use up to 9 fresh IVF cycles total. This is consistent with the Habbema et al. 2015 modeling framework, which assumes "a course of three IVF cycles" per child.
 
@@ -317,35 +330,37 @@ In a study of 169 oocyte thaw patients matched to 338 IVF patients, the age at w
 
 **What it determines:** Per-transfer live birth rates for previously created and frozen embryos.
 
-**Source:** CDC ART National Summary Reports, combined with the Barrett 2024 finding that transfer age doesn't affect outcomes.
+**Source:** [SART 2023 Outcome Tables](https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables) — frozen blastocyst + frozen cleavage (non-PGT-A), pooled across SET and MET, weighted by number of transfers. Combined with the Barrett 2024 finding that transfer age doesn't affect outcomes.
 
-**What we use (approximate per-transfer live birth rates, by age at embryo creation):**
+**What we use (per-transfer live birth rates, by age at embryo creation):**
 
 | Age at embryo creation | LBR per transfer |
 |------------------------|-----------------|
-| < 35                   | 0.40            |
-| 35-37                  | 0.30            |
-| 38-40                  | 0.20            |
-| 41-42                  | 0.12            |
-| > 42                   | 0.05            |
+| < 35                   | 0.462           |
+| 35-37                  | 0.403           |
+| 38-40                  | 0.331           |
+| 41-42                  | 0.226           |
+| > 42                   | 0.141           |
 
-These mirror the fresh IVF rates because embryo quality is primarily determined at the time of creation. The key insight (from Barrett 2024) is that these rates apply regardless of how old the woman is when the transfer occurs.
+Frozen embryo rates are higher than fresh IVF rates because the freeze-thaw process selects for hardier embryos, and the uterus has time to recover from stimulation. The key insight (from Barrett 2024) is that these rates apply regardless of how old the woman is when the transfer occurs — a 30-year-old's frozen embryo retains 30-year-old success rates even if transferred at 40.
 
 #### PGT-A Tested (Euploid) Embryos
 
 Embryos that have undergone preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher per-transfer live birth rates because the dominant age-dependent failure mode — chromosomal aneuploidy — has been removed.
 
-**Source:** Jiang et al. 2025 "Live birth rates after single euploid frozen embryo transfer: a retrospective cohort study." *Journal of Ovarian Research*. [DOI: 10.1186/s13048-025-01602-9](https://doi.org/10.1186/s13048-025-01602-9), n=1,037 single euploid transfers.
+**Source:** Jiang et al. 2025 "Live birth rates after single euploid frozen embryo transfer: a retrospective cohort study." *Journal of Ovarian Research*. [DOI: 10.1186/s13048-025-01602-9](https://doi.org/10.1186/s13048-025-01602-9), n=1,037 single euploid transfers, stratified by age at embryo creation.
 
-| Age at embryo creation | Untested LBR | PGT-A tested LBR | Source |
-|------------------------|-------------|-------------------|--------|
-| < 35                   | 0.40        | 0.545             | Jiang 2025 |
-| 35-37                  | 0.30        | 0.540             | Jiang 2025 |
-| 38-40                  | 0.20        | 0.417             | Jiang 2025 |
-| 41-42                  | 0.12        | 0.350             | Extrapolated |
-| > 42                   | 0.05        | 0.300             | Extrapolated |
+We use Jiang 2025 rather than SART registry data for PGT-A because SART stratifies by age at transfer, not age at creation. Since PGT-A embryos are often banked for later use, the SART older-age brackets are inflated by embryos created at younger ages. Jiang 2025 controls for this by indexing outcomes to creation age.
 
-The 41-42 and 43+ brackets are extrapolated downward from the Jiang data. Even euploid embryos from older oocytes have reduced implantation potential from non-chromosomal factors such as mitochondrial quality and epigenetic integrity.
+| Age at embryo creation | Untested LBR | PGT-A tested LBR |
+|------------------------|-------------|-------------------|
+| < 35                   | 0.462       | 0.545             |
+| 35-37                  | 0.403       | 0.540             |
+| 38-40                  | 0.331       | 0.417             |
+| 41-42                  | 0.226       | 0.350             |
+| > 42                   | 0.141       | 0.300             |
+
+The 41-42 and 43+ PGT-A brackets are extrapolated downward from the Jiang data. Even euploid embryos from older oocytes have reduced implantation potential from non-chromosomal factors such as mitochondrial quality and epigenetic integrity.
 
 **How it's used in the model:** Users can input multiple batches of frozen embryos, optionally marking each batch as PGT-A tested. Frozen embryos are the highest-priority assisted reproduction pathway (since they skip the egg-to-embryo attrition step and have higher per-transfer success). One embryo is transferred per cycle, and the batch is decremented. Batches are used youngest-creation-age first. When a batch is depleted, the next batch is used. The BMI IVF adjustment applies. When a batch is marked as PGT-A tested, the euploid transfer rates are used instead of the aggregate rates.
 

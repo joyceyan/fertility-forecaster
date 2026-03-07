@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from .curves import (
+    ART_MISCARRIAGE_RATE,
     OOCYTE_SURVIVAL_RATE,
     apply_odds_ratio,
     bmi_fecundability_fr,
@@ -228,9 +229,12 @@ def run_simulation(
             p_conceive[natural] = p_natural
 
         # Fresh IVF pathway
+        # ivf_success_rate returns live birth rates; convert to clinical
+        # pregnancy rates so the separate miscarriage roll yields correct LBR.
         ivf_mask = trying & on_ivf
         if np.any(ivf_mask):
-            p_conceive[ivf_mask] = ivf_success_rate(age[ivf_mask]) * bmi_ivf
+            lbr = ivf_success_rate(age[ivf_mask]) * bmi_ivf
+            p_conceive[ivf_mask] = lbr / (1.0 - ART_MISCARRIAGE_RATE)
 
         # Frozen embryo pathway
         fe_mask = trying & using_frozen_embryo
@@ -243,7 +247,7 @@ def run_simulation(
                 frozen_embryo_transfer_rate_pgt(creation_ages),
                 frozen_embryo_transfer_rate(creation_ages),
             ) * bmi_ivf
-            p_conceive[fe_mask] = p_fe
+            p_conceive[fe_mask] = p_fe / (1.0 - ART_MISCARRIAGE_RATE)
             # Decrement 1 embryo per cycle from current batch
             fe_rows = np.where(fe_mask)[0]
             for r in fe_rows:
@@ -265,7 +269,7 @@ def run_simulation(
             surviving = eggs_this_cycle.astype(float) * OOCYTE_SURVIVAL_RATE
             per_oocyte = frozen_egg_per_oocyte_rate(freeze_ages)
             p_fg = (1.0 - (1.0 - per_oocyte) ** surviving) * bmi_ivf
-            p_conceive[fg_mask] = p_fg
+            p_conceive[fg_mask] = p_fg / (1.0 - ART_MISCARRIAGE_RATE)
             # Decrement eggs (never below 0)
             for i, r in enumerate(fg_rows):
                 bidx = current_egg_batch_idx[r]
@@ -281,10 +285,15 @@ def run_simulation(
         conceived = trying & (rng.random(N) < p_conceive)
 
         # 8. Miscarriage check
+        # Natural conceptions: age-dependent miscarriage with recurrent/male-age ORs
         p_miscarriage = miscarriage_curve(age)
         p_miscarriage = apply_odds_ratio(p_miscarriage, recurrent_miscarriage_or(consecutive_miscarriages))
         if has_male_age:
             p_miscarriage = apply_odds_ratio(p_miscarriage, male_age_miscarriage_or(male_age))
+        # ART conceptions: flat pooled miscarriage rate (timeline adjustment only;
+        # live birth rates already account for age-dependent losses)
+        art_conceived = conceived & (on_ivf | using_frozen_embryo | using_frozen_egg)
+        p_miscarriage[art_conceived] = ART_MISCARRIAGE_RATE
         # Clip miscarriage probability to [0, 1] for numerical stability
         np.clip(p_miscarriage, 0.0, 1.0, out=p_miscarriage)
         miscarried = conceived & (rng.random(N) < p_miscarriage)
@@ -384,10 +393,10 @@ def run_simulation(
         # 12. Advance age
         ivf_or_frozen = trying & (on_ivf | using_frozen_embryo | using_frozen_egg)
         natural_trying = trying & ~on_ivf & ~using_frozen_embryo & ~using_frozen_egg
-        age[ivf_or_frozen] += 2.0 / 12.0
+        age[ivf_or_frozen] += 4.0 / 12.0
         age[natural_trying] += 1.0 / 12.0
         if has_male_age:
-            male_age[ivf_or_frozen] += 2.0 / 12.0
+            male_age[ivf_or_frozen] += 4.0 / 12.0
             male_age[natural_trying] += 1.0 / 12.0
 
     # --- Result compilation ---

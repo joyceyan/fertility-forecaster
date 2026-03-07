@@ -12,7 +12,7 @@ export const SMOKING_LABELS: Record<SmokingStatus, string> = {
   never: "Never smoked",
   former: "Former smoker",
   current_occasional: "Occasional smoker",
-  current_regular: "Regular smoker",
+  current_regular: "Regular smoker (≥10/day)",
 };
 
 /**

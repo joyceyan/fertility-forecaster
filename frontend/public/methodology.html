@@ -110,6 +110,7 @@
         margin: 1rem 0;
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   </head>
   <body>
     <div class="container">
@@ -221,9 +222,23 @@
 
       <!-- 4. Male age -->
       <h3>4. Male Age and Miscarriage Risk</h3>
-      <p class="source-tag"><a href="https://doi.org/10.1001/jamanetworkopen.2024.36157">Boxem et al., 2024</a></p>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humupd/dmaa010">du Foss&eacute; et al., 2020</a></p>
       <p>
-        If the father is 40 or older, the risk of miscarriage roughly doubles (2&times;). The father's age does not affect the odds of getting pregnant &mdash; only whether the pregnancy carries to term. In the simulation, the male ages alongside the female, so this kicks in when he crosses 40.
+        If the father is 35 or older, the risk of miscarriage increases modestly:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Father's age</th><th>Effect on miscarriage risk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 35</td><td>1.0&times; (baseline)</td></tr>
+          <tr><td>35&ndash;39</td><td>1.15&times;</td></tr>
+          <tr><td>40&ndash;44</td><td>1.23&times;</td></tr>
+          <tr><td>45+</td><td>1.43&times;</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The father's age does not affect the odds of getting pregnant, only whether the pregnancy carries to term.
       </p>
 
       <!-- 5. BMI -->
@@ -280,23 +295,135 @@
         Not every couple has the same fertility. The 23% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity).
       </p>
       <p>
-        This matters a lot for predicting families with multiple children. If the model treated every couple as equally fertile, it would be too optimistic: it wouldn't account for the fact that a couple who struggled to conceive their first child will likely also struggle with their second.
+        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life and it represents their inherent &ldquo;fertility type.&rdquo; The chart below shows a Beta distribution of how these rates are distributed across couples. The dots mark the 5th, 25th, 50th, 75th, and 95th percentiles. The dashed line marks the 23% population mean. Hover over the curve for details.
       </p>
-      <p>
-        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life &mdash; it represents their inherent &ldquo;fertility type.&rdquo; The spread looks like this:
-      </p>
-      <table>
-        <thead>
-          <tr><th>Couple percentile</th><th>Per-cycle chance of conceiving</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>5th (least fertile)</td><td>2.1%</td></tr>
-          <tr><td>25th</td><td>9.2%</td></tr>
-          <tr><td>50th (median)</td><td>19.3%</td></tr>
-          <tr><td>75th</td><td>33.4%</td></tr>
-          <tr><td>95th (most fertile)</td><td>56.7%</td></tr>
-        </tbody>
-      </table>
+      <div style="position: relative; margin: 1.5rem 0;">
+        <canvas id="fecundabilityChart"></canvas>
+      </div>
+      <script>
+      (function() {
+        function lnGamma(z) {
+          var c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+            771.32342877765313, -176.61502916214059, 12.507343278686905,
+            -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+          if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lnGamma(1 - z);
+          z -= 1;
+          var x = c[0];
+          for (var i = 1; i < 9; i++) x += c[i] / (z + i);
+          var t = z + 7.5;
+          return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+        }
+        function betaPDF(x, a, b) {
+          if (x <= 0 || x >= 1) return 0;
+          return Math.exp((a-1)*Math.log(x) + (b-1)*Math.log(1-x) - lnGamma(a) - lnGamma(b) + lnGamma(a+b));
+        }
+        var a = 1.15, b = 3.85, N = 300;
+        var curve = [], cdf = [];
+        var cum = 0;
+        for (var i = 0; i <= N; i++) {
+          var xVal = i / N * 0.70;
+          curve.push({ x: xVal * 100, y: betaPDF(xVal, a, b) });
+          if (i > 0) cum += betaPDF(((i - 0.5) / N) * 0.70, a, b) * (0.70 / N);
+          cdf.push(Math.min(cum, 1));
+        }
+        var pctInfo = [
+          { x: 2.1, pct: '5th percentile' },
+          { x: 9.2, pct: '25th percentile' },
+          { x: 19.3, pct: '50th (median)' },
+          { x: 33.4, pct: '75th percentile' },
+          { x: 56.7, pct: '95th percentile' }
+        ];
+        var pctData = pctInfo.map(function(p) {
+          return { x: p.x, y: betaPDF(p.x / 100, a, b) };
+        });
+        var meanData = [{ x: 23, y: 0 }, { x: 23, y: betaPDF(0.23, a, b) }];
+        new Chart(document.getElementById('fecundabilityChart'), {
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                data: curve,
+                showLine: true,
+                fill: 'origin',
+                backgroundColor: 'rgba(168, 162, 158, 0.18)',
+                borderColor: 'rgb(120, 113, 108)',
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHitRadius: 8,
+                tension: 0.1,
+                order: 3
+              },
+              {
+                label: 'mean',
+                data: meanData,
+                showLine: true,
+                borderColor: 'rgba(120, 113, 108, 0.45)',
+                borderWidth: 1.5,
+                borderDash: [5, 4],
+                pointRadius: 0,
+                pointHitRadius: 0,
+                order: 2
+              },
+              {
+                data: pctData,
+                pointRadius: 6,
+                pointBackgroundColor: 'rgb(87, 83, 78)',
+                pointBorderColor: '#fafaf9',
+                pointBorderWidth: 2,
+                pointHoverRadius: 8,
+                showLine: false,
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'nearest', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(28, 25, 23, 0.92)',
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                padding: { x: 12, y: 8 },
+                cornerRadius: 6,
+                displayColors: false,
+                filter: function(item) { return item.datasetIndex !== 1; },
+                callbacks: {
+                  title: function(items) {
+                    if (!items.length) return '';
+                    var item = items[0];
+                    if (item.datasetIndex === 2) return pctInfo[item.dataIndex].pct;
+                    return '';
+                  },
+                  label: function(item) {
+                    var rate = item.parsed.x;
+                    if (item.datasetIndex === 2) {
+                      return 'Per-cycle rate: ' + rate.toFixed(1) + '%';
+                    }
+                    var idx = item.dataIndex;
+                    var pctBelow = (cdf[idx] * 100).toFixed(0);
+                    return ['Per-cycle rate: ' + rate.toFixed(1) + '%',
+                            pctBelow + '% of couples have a lower rate'];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                min: 0, max: 70,
+                title: { display: true, text: 'Per-cycle conception rate', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { stepSize: 10, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              },
+              y: { display: false, beginAtZero: true }
+            }
+          }
+        });
+      })();
+      </script>
       <p>
         A couple at the 95th percentile has roughly a coin-flip chance of getting pregnant each month, while a couple at the 5th percentile faces long odds. Age-related decline is then applied on top of each couple's personal rate.
       </p>
@@ -313,15 +440,12 @@
           <tr><td>12 months</td><td>6.8%</td><td>0.5% &ndash; 18.6%</td></tr>
         </tbody>
       </table>
-      <p>
-        This doesn't mean your biology changed &mdash; it just means the model has a better guess about where you fall in the distribution.
-      </p>
 
       <!-- 9. Sterility -->
       <h3>9. Permanent Sterility</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Leridon, 2004 (via Habbema 2015)</a></p>
       <p>
-        A small percentage of women become permanently unable to conceive naturally at each age (due to things like premature ovarian failure). This is separate from the gradual age-related decline &mdash; it's an all-or-nothing threshold:
+        A small percentage of women become permanently unable to conceive naturally at each age (due to things like premature ovarian failure). This is separate from the gradual age-related decline; it's an all-or-nothing threshold:
       </p>
       <table>
         <thead>
@@ -338,27 +462,27 @@
         </tbody>
       </table>
       <p>
-        If you tell the model you've had a previous pregnancy, it won't assign you premature sterility at an age when you were demonstrably fertile. IVF can bypass most causes of natural sterility.
+        If you tell the model you've had a previous pregnancy (regardless of whether it resulted in a live birth or miscarriage), it won't assign you premature sterility at an age when you were demonstrably fertile. IVF can bypass most causes of natural sterility.
       </p>
 
       <!-- 10. IVF -->
       <h3>10. IVF Success Rates (Fresh Cycles)</h3>
-      <p class="source-tag">CDC ART National Summary Reports; UK HFEA dataset</p>
+      <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a> &mdash; fresh blastocyst + cleavage (non-PGT-A), pooled by transfer count</p>
       <table>
         <thead>
           <tr><th>Age</th><th>Chance of live birth per IVF cycle</th></tr>
         </thead>
         <tbody>
-          <tr><td>&lt; 35</td><td>40%</td></tr>
-          <tr><td>35&ndash;37</td><td>30%</td></tr>
-          <tr><td>38&ndash;40</td><td>20%</td></tr>
-          <tr><td>41&ndash;42</td><td>12%</td></tr>
-          <tr><td>43&ndash;44</td><td>5%</td></tr>
-          <tr><td>45+</td><td>2%</td></tr>
+          <tr><td>&lt; 35</td><td>40.5%</td></tr>
+          <tr><td>35&ndash;37</td><td>31.7%</td></tr>
+          <tr><td>38&ndash;40</td><td>21.3%</td></tr>
+          <tr><td>41&ndash;42</td><td>11.0%</td></tr>
+          <tr><td>43&ndash;44</td><td>4%</td></tr>
+          <tr><td>45+</td><td>1%</td></tr>
         </tbody>
       </table>
       <p>
-        Each IVF cycle takes about 2 months. By default, the model allows up to 3 fresh IVF cycles per child. The counter resets after each live birth.
+        Each IVF cycle takes about 4 months. This accounts for ovarian stimulation, egg retrieval, embryo culture, transfer, and the recommended rest period between cycles. By default, the model allows up to 3 fresh IVF cycles per child. The counter resets after each live birth.
       </p>
 
       <!-- 11. Frozen Eggs -->
@@ -384,22 +508,10 @@
 
       <!-- 12. Frozen Embryos -->
       <h3>12. Frozen Embryos</h3>
-      <p class="source-tag">CDC ART Reports; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
+      <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
       <p>
-        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success depends on the woman's age when the embryos were created:
+        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success still depends on the woman's age when the embryos were created.
       </p>
-      <table>
-        <thead>
-          <tr><th>Age when embryos were created</th><th>Live birth rate per transfer</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>&lt; 35</td><td>40%</td></tr>
-          <tr><td>35&ndash;37</td><td>30%</td></tr>
-          <tr><td>38&ndash;40</td><td>20%</td></tr>
-          <tr><td>41&ndash;42</td><td>12%</td></tr>
-          <tr><td>&gt; 42</td><td>5%</td></tr>
-        </tbody>
-      </table>
 
       <h4>PGT-A Tested (Euploid) Embryos</h4>
       <p>
@@ -411,15 +523,15 @@
           <tr><th>Age when embryos were created</th><th>Untested</th><th>PGT-A tested</th></tr>
         </thead>
         <tbody>
-          <tr><td>&lt; 35</td><td>40%</td><td>54.5%</td></tr>
-          <tr><td>35&ndash;37</td><td>30%</td><td>54.0%</td></tr>
-          <tr><td>38&ndash;40</td><td>20%</td><td>41.7%</td></tr>
-          <tr><td>41&ndash;42</td><td>12%</td><td>35.0%</td></tr>
-          <tr><td>&gt; 42</td><td>5%</td><td>30.0%</td></tr>
+          <tr><td>&lt; 35</td><td>46.2%</td><td>54.5%</td></tr>
+          <tr><td>35&ndash;37</td><td>40.3%</td><td>54.0%</td></tr>
+          <tr><td>38&ndash;40</td><td>33.1%</td><td>41.7%</td></tr>
+          <tr><td>41&ndash;42</td><td>22.6%</td><td>35.0%</td></tr>
+          <tr><td>&gt; 42</td><td>14.1%</td><td>30.0%</td></tr>
         </tbody>
       </table>
       <p>
-        The 41&ndash;42 and 43+ rates are extrapolated. Even euploid embryos from older eggs have reduced implantation from non-chromosomal factors (mitochondrial quality, epigenetics).
+        PGT-A rates are from Jiang 2025 (n=1,037 single euploid transfers), which stratifies by age at embryo creation rather than age at transfer. This is important because PGT-A embryos are often banked for later use &mdash; registry data stratified by transfer age overstates success for older creation ages. The 41&ndash;42 and 43+ rates are extrapolated. Even euploid embryos from older eggs have reduced implantation from non-chromosomal factors (mitochondrial quality, epigenetics).
       </p>
 
       <h2>Comparison with Habbema et al. 2015</h2>
@@ -447,12 +559,12 @@
 
       <h3>Newer miscarriage data</h3>
       <p>
-        Habbema used miscarriage rates from Leridon 2004, which were based on older data. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, a registry study of 421,201 pregnancies in Norway with more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1001/jamanetworkopen.2024.36157">male partner age</a> on miscarriage, which Habbema did not model.
+        Habbema used miscarriage rates from Leridon 2004, which were based on older data. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, a registry study of 421,201 pregnancies in Norway with more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1093/humupd/dmaa010">male partner age</a> on miscarriage, which Habbema did not model.
       </p>
 
       <h3>Newer IVF data</h3>
       <p>
-        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the CDC Assisted Reproductive Technology National Summary Reports and the UK HFEA dataset (250,000+ treatment records), which reflect these improvements.
+        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>, pooling fresh blastocyst and cleavage-stage transfers weighted by volume to reflect the actual mix of protocols patients experience.
       </p>
 
       <h3>Frozen eggs, frozen embryos, and PGT-A</h3>
