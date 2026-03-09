@@ -171,8 +171,10 @@ def frozen_egg_per_oocyte_rate(retrieval_ages: np.ndarray) -> np.ndarray:
 def frozen_embryo_transfer_rate(creation_ages: np.ndarray) -> np.ndarray:
     """Per-transfer live birth rate for frozen embryo transfer, by age at creation.
 
-    Source: SART 2023 — frozen blastocyst + frozen cleavage (non-PGT-A),
+    Source: SART 2023 Outcome Tables — blastocyst + cleavage (non-PGT-A),
     pooled across SET and MET, weighted by number of transfers.
+    Same pooling methodology as fresh IVF rates (Section 10).
+    >42 uses the raw SART >42 bucket (3.6% pooled LBR).
     """
     creation_ages = np.asarray(creation_ages, dtype=float)
     conditions = [
@@ -182,22 +184,16 @@ def frozen_embryo_transfer_rate(creation_ages: np.ndarray) -> np.ndarray:
         (creation_ages >= 41) & (creation_ages < 43),
         creation_ages >= 43,
     ]
-    choices = [0.462, 0.403, 0.331, 0.226, 0.141]
+    choices = [0.405, 0.317, 0.213, 0.110, 0.036]
     return np.select(conditions, choices)
 
 
 def frozen_embryo_transfer_rate_pgt(creation_ages: np.ndarray) -> np.ndarray:
     """Per-transfer live birth rate for PGT-A tested (euploid) frozen embryos.
 
-    Source: Jiang et al. 2025 (DOI: 10.1186/s13048-025-01602-9), n=1,037
-    single euploid transfers, stratified by age at embryo creation.
-    41-42 and 43+ extrapolated downward for non-chromosomal factors
-    (mitochondrial quality, epigenetics).
-
-    We use Jiang 2025 rather than SART registry data because SART stratifies
-    by age at transfer, not age at creation. Since PGT-A embryos are often
-    banked for later use, the SART older-age brackets are inflated by embryos
-    created at younger ages.
+    Source: SART 2023 Outcome Tables — PGT-A single embryo transfers,
+    stratified by age of woman at retrieval (= age at embryo creation).
+    n=96,855 transfers across all age groups.
     """
     creation_ages = np.asarray(creation_ages, dtype=float)
     conditions = [
@@ -207,7 +203,7 @@ def frozen_embryo_transfer_rate_pgt(creation_ages: np.ndarray) -> np.ndarray:
         (creation_ages >= 41) & (creation_ages < 43),
         creation_ages >= 43,
     ]
-    choices = [0.545, 0.540, 0.417, 0.350, 0.300]
+    choices = [0.545, 0.532, 0.514, 0.499, 0.463]
     return np.select(conditions, choices)
 
 

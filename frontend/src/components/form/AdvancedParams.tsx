@@ -56,7 +56,7 @@ export default function AdvancedParams({ form, onChange }: Props) {
         </div>
         {showFatherInfo && (
           <p className="mb-2 text-xs leading-relaxed text-stone-500 bg-stone-50 rounded-md p-2">
-            It only matters when the father is over 40, where it may modestly increase time to conception and miscarriage risk.
+            It only matters when the father is over 40, where it may modestly increase miscarriage risk.
           </p>
         )}
         <input

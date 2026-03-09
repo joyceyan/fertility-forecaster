@@ -149,18 +149,18 @@ class TestFrozenEggRate:
 
 
 class TestFrozenEmbryoTransferRate:
-    """SART 2023 frozen blast + cleavage (non-PGT) pooled, weighted by transfers."""
+    """SART 2023 blastocyst + cleavage (non-PGT-A) pooled, by age at retrieval."""
 
     def test_age_brackets(self):
-        assert frozen_embryo_transfer_rate(np.array([30.0]))[0] == 0.462
-        assert frozen_embryo_transfer_rate(np.array([36.0]))[0] == 0.403
-        assert frozen_embryo_transfer_rate(np.array([39.0]))[0] == 0.331
-        assert frozen_embryo_transfer_rate(np.array([41.5]))[0] == 0.226
-        assert frozen_embryo_transfer_rate(np.array([44.0]))[0] == 0.141
+        assert frozen_embryo_transfer_rate(np.array([30.0]))[0] == 0.405
+        assert frozen_embryo_transfer_rate(np.array([36.0]))[0] == 0.317
+        assert frozen_embryo_transfer_rate(np.array([39.0]))[0] == 0.213
+        assert frozen_embryo_transfer_rate(np.array([41.5]))[0] == 0.110
+        assert frozen_embryo_transfer_rate(np.array([44.0]))[0] == 0.036
 
     def test_vectorized(self):
         ages = np.array([30, 36, 39, 42, 44], dtype=float)
-        expected = np.array([0.462, 0.403, 0.331, 0.226, 0.141])
+        expected = np.array([0.405, 0.317, 0.213, 0.110, 0.036])
         np.testing.assert_allclose(frozen_embryo_transfer_rate(ages), expected)
 
 
@@ -396,18 +396,18 @@ class TestGravidRawRatios:
 
 
 class TestFrozenEmbryoTransferRatePGT:
-    """PGT-A tested (euploid) frozen embryo transfer rates (Jiang 2025)."""
+    """PGT-A tested (euploid) frozen embryo transfer rates (SART 2023 SET)."""
 
     def test_age_brackets(self):
         assert frozen_embryo_transfer_rate_pgt(np.array([30.0]))[0] == 0.545
-        assert frozen_embryo_transfer_rate_pgt(np.array([36.0]))[0] == 0.540
-        assert frozen_embryo_transfer_rate_pgt(np.array([39.0]))[0] == 0.417
-        assert frozen_embryo_transfer_rate_pgt(np.array([41.5]))[0] == 0.350
-        assert frozen_embryo_transfer_rate_pgt(np.array([44.0]))[0] == 0.300
+        assert frozen_embryo_transfer_rate_pgt(np.array([36.0]))[0] == 0.532
+        assert frozen_embryo_transfer_rate_pgt(np.array([39.0]))[0] == 0.514
+        assert frozen_embryo_transfer_rate_pgt(np.array([41.5]))[0] == 0.499
+        assert frozen_embryo_transfer_rate_pgt(np.array([44.0]))[0] == 0.463
 
     def test_vectorized(self):
         ages = np.array([30, 36, 39, 42, 44], dtype=float)
-        expected = np.array([0.545, 0.540, 0.417, 0.350, 0.300])
+        expected = np.array([0.545, 0.532, 0.514, 0.499, 0.463])
         np.testing.assert_allclose(frozen_embryo_transfer_rate_pgt(ages), expected)
 
     def test_higher_than_untested(self):

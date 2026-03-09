@@ -108,6 +108,8 @@ The study also provides recurrent miscarriage risk, showing a strong pattern of 
 | 2                             | 2.21            |
 | 3+                            | 3.97            |
 
+**Comparison with Habbema/Leridon miscarriage rates:** Our Magnus 2019 rates are notably more pessimistic at older ages. Habbema/Leridon assumed ~25% at age 40 and ~35% at age 45, while Magnus 2019 reports 32.2% at 40-44 and 53.6% at 45+. This divergence is most pronounced above age 42 and contributes to our model being slightly more conservative for late starters at moderate confidence levels.
+
 **How it's used in the model:** Every time a simulated conception occurs, the model draws a miscarriage outcome using the age-appropriate rate. The rate is further adjusted if the woman has experienced consecutive miscarriages within the simulation, using odds ratios applied on the odds scale via the formula: `adjusted_prob = (base × OR) / (1 - base + base × OR)`. This prevents impossible values (>100%) at high base rates. A miscarriage adds a 3-month recovery period before the couple resumes trying. Consecutive miscarriages are tracked per couple and reset to zero on live birth.
 
 ---
@@ -309,11 +311,13 @@ A systematic review and meta-analysis of 10 studies covering 8,750 women who und
 *Number of eggs needed and per-oocyte live birth rate:*
 Namath A, et al. "The number of autologous, vitrified mature oocytes needed to obtain three euploid blastocysts increases with age." *Fertility and Sterility*. 2025. [DOI: 10.1016/j.fertnstert.2025.04.023](https://doi.org/10.1016/j.fertnstert.2025.04.023)
 
-Analysis of 1,041 thaw cycles. Expected live births per thawed mature oocyte:
+Analysis of 1,041 thaw cycles. The study directly reports expected live births per thawed mature oocyte for two age brackets:
 - Frozen at < 35: 0.13 per oocyte
-- Frozen at 35-37: 0.09 per oocyte (estimated)
-- Frozen at 38-40: 0.06 per oocyte (estimated)
 - Frozen at > 40: 0.04 per oocyte
+
+The intermediate brackets are linearly interpolated between these two data points, as the study does not report per-oocyte rates for the 35-40 range:
+- Frozen at 35-37: 0.09 per oocyte (interpolated)
+- Frozen at 38-40: 0.06 per oocyte (interpolated)
 
 To achieve ~93% probability of at least one child, women need approximately 15 mature oocytes if frozen before 35, ~30 if frozen at ≥38, and ~45 if frozen after 40.
 
@@ -330,37 +334,28 @@ In a study of 169 oocyte thaw patients matched to 338 IVF patients, the age at w
 
 **What it determines:** Per-transfer live birth rates for previously created and frozen embryos.
 
-**Source:** [SART 2023 Outcome Tables](https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables) — frozen blastocyst + frozen cleavage (non-PGT-A), pooled across SET and MET, weighted by number of transfers. Combined with the Barrett 2024 finding that transfer age doesn't affect outcomes.
+**Source:** [SART 2023 Outcome Tables](https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables), stratified by age of woman at retrieval (= age at embryo creation).
 
-**What we use (per-transfer live birth rates, by age at embryo creation):**
+- **Untested (non-PGT-A):** Blastocyst + cleavage pooled across SET and MET, weighted by number of transfers. Same pooling methodology as the fresh IVF rates in Section 10. The >42 rate uses the raw SART >42 bucket (3.6% pooled LBR).
+- **PGT-A tested (euploid):** Single embryo transfer rates. n=96,855 transfers across all age groups.
 
-| Age at embryo creation | LBR per transfer |
-|------------------------|-----------------|
-| < 35                   | 0.462           |
-| 35-37                  | 0.403           |
-| 38-40                  | 0.331           |
-| 41-42                  | 0.226           |
-| > 42                   | 0.141           |
-
-Frozen embryo rates are higher than fresh IVF rates because the freeze-thaw process selects for hardier embryos, and the uterus has time to recover from stimulation. The key insight (from Barrett 2024) is that these rates apply regardless of how old the woman is when the transfer occurs — a 30-year-old's frozen embryo retains 30-year-old success rates even if transferred at 40.
+The key insight (from Barrett 2024, [DOI: 10.1007/s10815-024-03149-y](https://doi.org/10.1007/s10815-024-03149-y)) is that success depends on the woman's age when eggs were retrieved, not her age at transfer — a 30-year-old's frozen embryo retains 30-year-old success rates even if transferred at 40. Barrett controlled for retrieval age in a multivariate regression and found no transfer-age effect on live birth rates (p=0.24).
 
 #### PGT-A Tested (Euploid) Embryos
 
-Embryos that have undergone preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher per-transfer live birth rates because the dominant age-dependent failure mode — chromosomal aneuploidy — has been removed.
+Embryos that have undergone preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher per-transfer live birth rates because the dominant age-dependent failure mode — chromosomal aneuploidy — has been removed. The PGT-A advantage is largest for older age groups, where aneuploidy rates are highest.
 
-**Source:** Jiang et al. 2025 "Live birth rates after single euploid frozen embryo transfer: a retrospective cohort study." *Journal of Ovarian Research*. [DOI: 10.1186/s13048-025-01602-9](https://doi.org/10.1186/s13048-025-01602-9), n=1,037 single euploid transfers, stratified by age at embryo creation.
-
-We use Jiang 2025 rather than SART registry data for PGT-A because SART stratifies by age at transfer, not age at creation. Since PGT-A embryos are often banked for later use, the SART older-age brackets are inflated by embryos created at younger ages. Jiang 2025 controls for this by indexing outcomes to creation age.
+**What we use (per-transfer live birth rates, by age at retrieval):**
 
 | Age at embryo creation | Untested LBR | PGT-A tested LBR |
 |------------------------|-------------|-------------------|
-| < 35                   | 0.462       | 0.545             |
-| 35-37                  | 0.403       | 0.540             |
-| 38-40                  | 0.331       | 0.417             |
-| 41-42                  | 0.226       | 0.350             |
-| > 42                   | 0.141       | 0.300             |
+| < 35                   | 0.405       | 0.545             |
+| 35-37                  | 0.317       | 0.532             |
+| 38-40                  | 0.213       | 0.514             |
+| 41-42                  | 0.110       | 0.499             |
+| > 42                   | 0.036       | 0.463             |
 
-The 41-42 and 43+ PGT-A brackets are extrapolated downward from the Jiang data. Even euploid embryos from older oocytes have reduced implantation potential from non-chromosomal factors such as mitochondrial quality and epigenetic integrity.
+The PGT-A curve is notably flat: even at >42, euploid embryos achieve a 46.3% live birth rate per transfer, compared to just 3.6% for untested embryos. This is because PGT-A removes the dominant age-related failure mode (chromosomal aneuploidy), leaving only non-chromosomal factors (mitochondrial quality, epigenetics, cytoplasmic integrity) to drive the modest remaining decline.
 
 **How it's used in the model:** Users can input multiple batches of frozen embryos, optionally marking each batch as PGT-A tested. Frozen embryos are the highest-priority assisted reproduction pathway (since they skip the egg-to-embryo attrition step and have higher per-transfer success). One embryo is transferred per cycle, and the batch is decremented. Batches are used youngest-creation-age first. When a batch is depleted, the next batch is used. The BMI IVF adjustment applies. When a batch is marked as PGT-A tested, the euploid transfer rates are used instead of the aggregate rates.
 
@@ -380,7 +375,7 @@ The following parameters can be configured by the user:
 | `ivf_willingness` | last_resort | "yes", "no", or "last_resort" |
 | `cycles_before_ivf` | 12 | Months of natural trying before IVF eligibility |
 | `max_ivf_cycles` | 3 | Max fresh IVF cycles per child (resets after each live birth) |
-| `min_spacing_months` | 18 | Minimum months between births |
+| `min_spacing_months` | 15 | Minimum months between births |
 | `prior_live_births` | 0 | Number of existing children |
 | `prior_miscarriages` | 0 | Consecutive miscarriages since last live birth (resets to 0 after each live birth; used to seed recurrent miscarriage risk) |
 | `cycles_tried` | 0 | Months already spent trying (shifts fecundability draws lower) |

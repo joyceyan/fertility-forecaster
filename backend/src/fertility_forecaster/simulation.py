@@ -102,7 +102,11 @@ def run_simulation(
         sterility_thresholds = min_threshold + rng.random(N) * (1.0 - min_threshold)
     else:
         sterility_thresholds = rng.random(N)
-    already_sterile = np.zeros(N, dtype=bool)
+    # Determine which couples are already sterile at the starting age,
+    # so they are excluded from the fecundability draw (avoiding double-
+    # counting low-fertility and sterility in the same couple).
+    init_sterility_prob = float(sterility_curve(np.array([params.female_age]))[0])
+    already_sterile = init_sterility_prob >= sterility_thresholds
 
     # --- Frozen embryo batches (sorted youngest-first) ---
     embryo_batches_sorted = sorted(params.frozen_embryo_batches, key=lambda b: b.age_at_freeze)
@@ -142,10 +146,17 @@ def run_simulation(
     # --- Individual fecundability draws ---
     # Each couple gets a fixed "fertility type" drawn from a Beta distribution.
     # Age-related decline is applied as a ratio on top of their individual value.
+    # Only non-sterile couples draw from the distribution; sterile couples
+    # stay at 0, since permanent sterility is a separate mechanism from
+    # fecundability heterogeneity among fertile couples.
     init_mean_fecund = float(fecundability_curve(np.array([params.female_age]), gravid=use_gravid)[0])
-    individual_fecund = draw_individual_fecundabilities(
-        init_mean_fecund, N, rng, cycles_tried=params.cycles_tried,
-    )
+    individual_fecund = np.zeros(N, dtype=float)
+    fertile_mask = ~already_sterile
+    n_fertile = int(np.sum(fertile_mask))
+    if n_fertile > 0:
+        individual_fecund[fertile_mask] = draw_individual_fecundabilities(
+            init_mean_fecund, n_fertile, rng, cycles_tried=params.cycles_tried,
+        )
     # Store the starting-age population mean for computing age ratios
     starting_age_mean = init_mean_fecund
 

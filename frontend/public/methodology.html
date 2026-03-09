@@ -160,25 +160,102 @@
       <p>
         Your per-cycle odds of getting pregnant decline with age. The model uses two different curves depending on whether you've been pregnant before:
       </p>
-      <table>
-        <thead>
-          <tr><th>Age group</th><th>Never been pregnant</th><th>Been pregnant before</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>18&ndash;24</td><td>23.0%</td><td>23.0%</td></tr>
-          <tr><td>25&ndash;27</td><td>20.2%</td><td>21.2%</td></tr>
-          <tr><td>28&ndash;30</td><td>18.4%</td><td>21.9%</td></tr>
-          <tr><td>31&ndash;33</td><td>19.3%</td><td>20.2%</td></tr>
-          <tr><td>34&ndash;36</td><td>15.6%</td><td>22.1%</td></tr>
-          <tr><td>37&ndash;39</td><td>11.7%</td><td>16.1%</td></tr>
-          <tr><td>40&ndash;45</td><td>4.6%</td><td>11.0%</td></tr>
-        </tbody>
-      </table>
+      <div style="position: relative; margin: 1.5rem 0;">
+        <canvas id="ageFecundabilityChart"></canvas>
+      </div>
+      <script>
+      (function() {
+        var labels = ['18–24', '25–27', '28–30', '31–33', '34–36', '37–39', '40–45'];
+        var nulligravid = [23.0, 20.2, 18.4, 19.3, 15.6, 11.7, 4.6];
+        var gravid = [23.0, 21.2, 21.9, 20.2, 22.1, 16.1, 11.0];
+        new Chart(document.getElementById('ageFecundabilityChart'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Never been pregnant',
+                data: nulligravid,
+                borderColor: 'rgb(130, 80, 170)',
+                backgroundColor: 'rgba(130, 80, 170, 0.08)',
+                borderWidth: 2.5,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(130, 80, 170)',
+                pointBorderColor: '#fafaf9',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: 'Been pregnant before',
+                data: gravid,
+                borderColor: 'rgb(55, 130, 110)',
+                backgroundColor: 'rgba(55, 130, 110, 0.08)',
+                borderWidth: 2.5,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(55, 130, 110)',
+                pointBorderColor: '#fafaf9',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                align: 'end',
+                labels: {
+                  boxWidth: 20,
+                  padding: 15,
+                  font: { size: 12, family: "'Inter', system-ui, sans-serif" },
+                  color: '#57534e',
+                  usePointStyle: false
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(28, 25, 23, 0.92)',
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                padding: { x: 12, y: 8 },
+                cornerRadius: 6,
+                callbacks: {
+                  title: function(items) { return 'Ages ' + items[0].label; },
+                  label: function(item) {
+                    return item.dataset.label + ': ' + item.parsed.y.toFixed(1) + '% per cycle';
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Age group', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              },
+              y: {
+                min: 0, max: 28,
+                title: { display: true, text: 'Per-cycle conception rate', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { stepSize: 5, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              }
+            }
+          }
+        });
+      })();
+      </script>
       <p>
         <strong>Why the difference?</strong> Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy, regardless of whether the pregnancy resulted in a live birth or miscarriage. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant. A 35-year-old who has been pregnant before has about 22% odds per cycle, versus about 16% for someone who hasn't.
       </p>
       <p>
-        In our model, if a virtual couple has had a live birth, they are considered to have been pregnant before for the remainder of the simulation.
+        In our model, which curve is used depends on whether <em>you</em> report a prior pregnancy (live birth or miscarriage) when setting up the simulation. If you do, all 10,000 virtual couples use the &ldquo;been pregnant before&rdquo; curve for the entire run. If you don't, they all use the &ldquo;never been pregnant&rdquo; curve &mdash; even after conceiving within the simulation. This is because the simulation's own filtering already handles the selection effect: couples who conceive quickly are inherently more fertile (via their individual fertility draw), so they naturally perform better on subsequent children without needing the gravid curve's boost.
       </p>
       <p>
         Note that male age does not meaningfully affect conception odds after controlling for female age. Our model only factors male age into miscarriage risk (see Section 4).
@@ -489,50 +566,131 @@
       <h3>11. Frozen Eggs</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humupd/dmae009">Hirsch et al., 2024</a>; <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath et al., 2025</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
       <p>
-        About 78.5% of frozen eggs survive the thawing process. The chance of a live birth from each surviving egg depends on how old you were when they were frozen:
+        About 78.5% of frozen eggs survive the thawing process (<a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a>). The chance of a live birth from each surviving egg depends on how old you were when they were frozen (<a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>):
       </p>
       <table>
         <thead>
-          <tr><th>Age when eggs were frozen</th><th>Live birth rate per egg</th></tr>
+          <tr><th>Age when eggs were frozen</th><th>Live birth rate per egg</th><th>Source</th></tr>
         </thead>
         <tbody>
-          <tr><td>&lt; 35</td><td>13%</td></tr>
-          <tr><td>35&ndash;37</td><td>9%</td></tr>
-          <tr><td>38&ndash;40</td><td>6%</td></tr>
-          <tr><td>&gt; 40</td><td>4%</td></tr>
+          <tr><td>&lt; 35</td><td>13%</td><td>Namath 2025</td></tr>
+          <tr><td>35&ndash;37</td><td>9%</td><td>Interpolated</td></tr>
+          <tr><td>38&ndash;40</td><td>6%</td><td>Interpolated</td></tr>
+          <tr><td>&gt; 40</td><td>4%</td><td>Namath 2025</td></tr>
         </tbody>
       </table>
       <p>
-        The key benefit: eggs frozen at 30 retain the quality of a 30-year-old's eggs, even if used at 40. Up to 9 eggs are thawed per cycle.
+        Namath 2025 directly reports per-oocyte live birth rates for the &lt;&nbsp;35 and &gt;&nbsp;40 brackets. The 35&ndash;37 and 38&ndash;40 values are linearly interpolated between these two data points, as the study does not report per-oocyte rates for the intermediate range.
+      </p>
+      <p>
+        The key benefit: eggs frozen at 30 retain the quality of a 30-year-old's eggs, even if used at 40 (<a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett 2024</a>). Up to 9 eggs are thawed per cycle.
       </p>
 
       <!-- 12. Frozen Embryos -->
       <h3>12. Frozen Embryos</h3>
       <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
       <p>
-        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success still depends on the woman's age when the embryos were created.
+        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success depends on the woman's age when the embryos were created (age at retrieval), not her age at transfer. <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett 2024</a> controlled for retrieval age and found no transfer-age effect on live birth rates.
+      </p>
+      <p>
+        Both columns below use <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 data</a> stratified by age of woman at retrieval. Untested rates pool blastocyst + cleavage (non-PGT-A) transfers. PGT-A rates use single embryo transfers only (n=96,855 across all age groups).
       </p>
 
       <h4>PGT-A Tested (Euploid) Embryos</h4>
       <p>
-        Embryos that have been screened with preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher success rates, because the main age-dependent cause of failure &mdash; chromosomal abnormalities &mdash; has been removed.
+        Embryos that have been screened with preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher success rates, because the main age-dependent cause of failure &mdash; chromosomal abnormalities &mdash; has been removed. The PGT-A curve is notably flat: even at age &gt;&nbsp;42, euploid embryos achieve a 46.3% live birth rate per transfer.
       </p>
-      <p class="source-tag"><a href="https://doi.org/10.1186/s13048-025-01602-9">Jiang et al., 2025</a></p>
-      <table>
-        <thead>
-          <tr><th>Age when embryos were created</th><th>Untested</th><th>PGT-A tested</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>&lt; 35</td><td>46.2%</td><td>54.5%</td></tr>
-          <tr><td>35&ndash;37</td><td>40.3%</td><td>54.0%</td></tr>
-          <tr><td>38&ndash;40</td><td>33.1%</td><td>41.7%</td></tr>
-          <tr><td>41&ndash;42</td><td>22.6%</td><td>35.0%</td></tr>
-          <tr><td>&gt; 42</td><td>14.1%</td><td>30.0%</td></tr>
-        </tbody>
-      </table>
-      <p>
-        PGT-A rates are from Jiang 2025 (n=1,037 single euploid transfers), which stratifies by age at embryo creation rather than age at transfer. This is important because PGT-A embryos are often banked for later use &mdash; registry data stratified by transfer age overstates success for older creation ages. The 41&ndash;42 and 43+ rates are extrapolated. Even euploid embryos from older eggs have reduced implantation from non-chromosomal factors (mitochondrial quality, epigenetics).
-      </p>
+      <div style="position: relative; margin: 1.5rem 0;">
+        <canvas id="frozenEmbryoChart"></canvas>
+      </div>
+      <script>
+      (function() {
+        var labels = ['< 35', '35–37', '38–40', '41–42', '> 42'];
+        var untested = [40.5, 31.7, 21.3, 11.0, 3.6];
+        var pgtA = [54.5, 53.2, 51.4, 49.9, 46.3];
+        new Chart(document.getElementById('frozenEmbryoChart'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Untested',
+                data: untested,
+                borderColor: 'rgb(130, 80, 170)',
+                backgroundColor: 'rgba(130, 80, 170, 0.08)',
+                borderWidth: 2.5,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(130, 80, 170)',
+                pointBorderColor: '#fafaf9',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: 'PGT-A tested (euploid)',
+                data: pgtA,
+                borderColor: 'rgb(55, 130, 110)',
+                backgroundColor: 'rgba(55, 130, 110, 0.08)',
+                borderWidth: 2.5,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(55, 130, 110)',
+                pointBorderColor: '#fafaf9',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                align: 'end',
+                labels: {
+                  boxWidth: 20,
+                  padding: 15,
+                  font: { size: 12, family: "'Inter', system-ui, sans-serif" },
+                  color: '#57534e',
+                  usePointStyle: false
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(28, 25, 23, 0.92)',
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                padding: { x: 12, y: 8 },
+                cornerRadius: 6,
+                callbacks: {
+                  title: function(items) { return 'Age at retrieval: ' + items[0].label; },
+                  label: function(item) {
+                    return item.dataset.label + ': ' + item.parsed.y.toFixed(1) + '% live birth rate';
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Age at embryo creation', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              },
+              y: {
+                min: 0, max: 65,
+                title: { display: true, text: 'Live birth rate per transfer', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { stepSize: 10, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              }
+            }
+          }
+        });
+      })();
+      </script>
 
       <h2>Comparison with Habbema et al. 2015</h2>
       <p>
@@ -561,6 +719,9 @@
       <p>
         Habbema used miscarriage rates from Leridon 2004, which were based on older data. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, a registry study of 421,201 pregnancies in Norway with more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1093/humupd/dmaa010">male partner age</a> on miscarriage, which Habbema did not model.
       </p>
+      <p>
+        Our miscarriage rates are notably more pessimistic than Habbema's at older ages. Habbema/Leridon assumed ~25% at age 40 and ~35% at age 45, while Magnus 2019 reports 32.2% at 40&ndash;44 and 53.6% at 45+. This divergence is most pronounced above age 42 and contributes to our model being slightly more conservative for late starters at moderate confidence levels.
+      </p>
 
       <h3>Newer IVF data</h3>
       <p>
@@ -569,7 +730,7 @@
 
       <h3>Frozen eggs, frozen embryos, and PGT-A</h3>
       <p>
-        Habbema's model included fresh IVF as the only assisted reproduction option. Ours adds frozen egg batches (with age-at-freeze-dependent per-oocyte rates from <a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a> and <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>), frozen embryo batches (with higher per-transfer rates than fresh IVF), and PGT-A tested embryos (with euploid transfer rates from <a href="https://doi.org/10.1186/s13048-025-01602-9">Jiang 2025</a>). Users can enter their actual frozen inventory and the model will use it before falling back to fresh IVF.
+        Habbema's model included fresh IVF as the only assisted reproduction option. Ours adds frozen egg batches (with age-at-freeze-dependent per-oocyte rates from <a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a> and <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>), frozen embryo batches, and PGT-A tested embryos. All frozen embryo and PGT-A transfer rates come from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>, stratified by age at retrieval. Users can enter their actual frozen inventory and the model will use it before falling back to fresh IVF.
       </p>
 
       <h3>Pregnancy history affects age-related decline</h3>
@@ -577,7 +738,10 @@
         Habbema used a single age-decline curve for all women. We use two separate curves from <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink 2017</a>: one for women who have never been pregnant, and one for women who have been pregnant before (see Section 2). The difference is large &mdash; at age 35, a woman who has been pregnant before retains about 96% of her baseline fertility, versus 68% for someone who hasn't. This isn't because pregnancy itself improves fertility; it's because women who have never conceived by their late 30s are more likely to include those with undiagnosed subfertility conditions, which drags the group average down.
       </p>
       <p>
-        In practice, this makes our model <strong>more optimistic for second and third children</strong> compared to Habbema. If you've already had one child, you've demonstrated that your reproductive system works, so the model applies the more favorable &ldquo;been pregnant before&rdquo; decline curve for your subsequent children.
+        The curve is chosen once at initialization based on what you report, not updated mid-simulation. If you tell the model you've had a prior pregnancy, all simulated couples use the more favorable &ldquo;been pregnant before&rdquo; curve for the entire run. If you haven't, they use the &ldquo;never been pregnant&rdquo; curve throughout &mdash; the simulation's own individual fertility draws already capture the selection effect (couples who conceive quickly are inherently more fertile and will continue to be for subsequent children).
+      </p>
+      <p>
+        In practice, this makes our model <strong>more optimistic for second and third children when you report a prior pregnancy</strong> compared to Habbema, because the &ldquo;been pregnant before&rdquo; curve shows much less age-related decline.
       </p>
 
       <h3>BMI and smoking adjustments</h3>
@@ -591,7 +755,7 @@
       </p>
       <ul>
         <li>Couples wait at least 15 months after the birth of a child before trying for the next pregnancy.</li>
-        <li>IVF begins after 2 years of unsuccessful natural trying if the woman is under 33, or 1 year if she is 33 or older.</li>
+        <li>IVF begins after 3 years of unsuccessful natural trying if the woman is under 33, 2 years if she is between 33 and 38, or 1 year if she is 38 or older.</li>
         <li>Only 3 IVF cycles are attempted per child.</li>
       </ul>
       <p>
