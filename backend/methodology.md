@@ -29,17 +29,20 @@ After simulating all 10,000 couples, the model reports what percentage achieved 
 
 **What it determines:** The starting per-cycle probability of natural conception, before any age, BMI, or smoking adjustments are applied. This is the anchor from which all natural conception rates are derived.
 
-**Source:** Habbema JDF, et al. "Realizing a desired family size: when should couples start?" *Human Reproduction*. 2015. [DOI: 10.1093/humrep/dev148](https://doi.org/10.1093/humrep/dev148), building on the Leridon (2004) natural fertility model.
+**Sources:**
+- American Society for Reproductive Medicine (ASRM). ["Defining Infertility."](https://www.reproductivefacts.org/news-and-publications/fact-sheets-and-infographics/defining-infertility/) Patient fact sheet citing 25–30% per cycle for women in their 20s to early 30s.
+- Wesselink AK, et al. "Age and fecundability in a North American preconception cohort study." *American Journal of Obstetrics and Gynecology*. 2017. [DOI: 10.1016/j.ajog.2017.09.002](https://doi.org/10.1016/j.ajog.2017.09.002). Uses the 21–24 age group as the highest-fecundability reference (FR = 1.00).
+- Habbema JDF, et al. "Realizing a desired family size: when should couples start?" *Human Reproduction*. 2015. [DOI: 10.1093/humrep/dev148](https://doi.org/10.1093/humrep/dev148). Reports an average fecundability of 23% across ages 20–30, building on the Leridon (2004) natural fertility model.
 
-**The value:** We set the base per-cycle conception probability at **0.23 (23%)**. This rate applies at full strength to the youngest ages in the model (18–24); it then declines with age via the fecundability ratios in Section 2.
+**The value:** We set the base per-cycle conception probability at **0.25 (25%)**. This rate applies at full strength to the youngest ages in the model (18–24); it then declines with age via the fecundability ratios in Section 2.
 
-**Where does 23% come from?** Habbema et al. 2015 states: "The model assumes an average natural per cycle conception rate (fecundability) of 23% between age 20 and 30 years, which is in line with data of contemporary populations." This value originates from the Leridon (2004) micro-simulation model, which is based on historical data on monthly pregnancy chances in natural non-contraceptive populations collected by Henry (1965) and Leridon (1977).
+**Where does 25% come from?** The ASRM cites a per-cycle conception probability of 25–30% for women in their 20s to early 30s. The Wesselink 2017 PRESTO cohort uses ages 21–24 as the reference group with the highest fecundability ratio (FR = 1.00), with all older age groups showing lower ratios — consistent with ~25% as the peak before age-related decline begins.
 
-A commonly cited figure in reproductive medicine is ~25% per cycle for young women, but this likely reflects upward selection bias — studies that recruit couples actively trying to conceive (e.g., the PRESTO cohort, Wesselink 2017) tend to enroll higher-fertility couples and exclude the lower end of the fertility distribution. The 23% figure is designed to represent the general population, including those who may take longer to conceive.
+Habbema et al. 2015 uses a slightly lower value of 23%, but that figure represents an *average* across ages 20–30, not a peak rate. Since our model applies Wesselink's age-ratio decline starting from the 18–24 reference group (which already shows a mild decline by the late 20s), 25% is the appropriate anchor — applying Wesselink ratios to this base produces an average of approximately 23% across ages 20–30, consistent with Habbema's figure.
 
 This value was validated by calibrating the model against Habbema's benchmark cutoff ages (the ages at which 90% of couples complete 1, 2, or 3 children), where our model matches within ±2 years across all benchmarks.
 
-**How it's used in the model:** This 23% base rate is multiplied by age-specific fecundability ratios (see Section 2) to produce the population-mean conception probability at each age. Individual couples then draw from a Beta distribution centered on this mean (see Section 8), producing realistic between-couple variation.
+**How it's used in the model:** This 25% base rate is multiplied by age-specific fecundability ratios (see Section 2) to produce the population-mean conception probability at each age. Individual couples then draw from a Beta distribution centered on this mean (see Section 8), producing realistic between-couple variation.
 
 ---
 
@@ -211,29 +214,29 @@ The effect is dose-dependent: heavy long-term smokers see a 23% reduction in per
 - `alpha = mean_fecund × concentration`
 - `beta = (1 - mean_fecund) × concentration + cycles_tried`
 
-The **concentration parameter** (set to 5.0) controls how much fertility varies between couples. Lower values produce more spread; higher values make couples more homogeneous. This value was calibrated against Habbema et al. 2015 benchmarks (90% completion cutoff ages for 1/2/3 children: 32/27/23). At concentration = 5.0, the model produces cutoffs of approximately 31.6/27.7/23.9 — all within ±1 year.
+The **concentration parameter** (set to 4.33, corresponding to CV = 0.75) controls how much fertility varies between couples. Lower values produce more spread; higher values make couples more homogeneous. This value was calibrated against all 18 Habbema et al. 2015 benchmark scenarios (1–3 children × 50/75/90% thresholds × with/without IVF), achieving MAE = 0.92 years, max error = 2.9 years, and RMSE = 1.21.
 
-With a population mean of 23% and concentration of 5.0, the resulting Beta(1.15, 3.85) distribution produces the following spread across couples:
+With a population mean of 25% and concentration of 4.33, the resulting Beta(1.08, 3.25) distribution produces the following spread across couples:
 
 | Percentile | Per-cycle conception rate |
 |------------|--------------------------|
-| 5th        | 2.1%                     |
+| 5th        | 2.0%                     |
 | 10th       | 3.9%                     |
-| 25th       | 9.2%                     |
-| 50th       | 19.3%                    |
-| 75th       | 33.4%                    |
-| 90th       | 48.0%                    |
-| 95th       | 56.7%                    |
+| 25th       | 9.7%                     |
+| 50th       | 21.0%                    |
+| 75th       | 36.6%                    |
+| 90th       | 52.5%                    |
+| 95th       | 61.7%                    |
 
-The middle 90% of couples receive a per-cycle rate between 2.1% and 56.7%. A couple at the 95th percentile has roughly a coin-flip chance of conceiving each cycle, while a couple at the 5th percentile faces long odds — and that personal rate is fixed for life. This is what makes the multi-child predictions realistic: a couple who struggled with child #1 will also struggle with child #2.
+The middle 90% of couples receive a per-cycle rate between 2.0% and 61.7%. A couple at the 95th percentile has roughly a coin-flip chance of conceiving each cycle, while a couple at the 5th percentile faces long odds — and that personal rate is fixed for life. This is what makes the multi-child predictions realistic: a couple who struggled with child #1 will also struggle with child #2.
 
 **Bayesian updating for couples already trying:** If the user reports `cycles_tried > 0` (they've already been trying without success), the Beta distribution's beta parameter is increased by the number of failed cycles. This shifts the entire distribution lower, reflecting the Bayesian insight that couples who haven't conceived quickly are more likely to have below-average fertility:
 
 | Cycles tried | Mean rate | Middle 90% range |
 |-------------|-----------|------------------|
-| 0 (fresh)   | 23.0%     | 2.1% – 56.7%    |
-| 6 months    | 10.5%     | 0.8% – 28.2%    |
-| 12 months   | 6.8%      | 0.5% – 18.6%    |
+| 0 (fresh)   | 25.0%     | 2.0% – 61.7%    |
+| 6 months    | 10.5%     | 0.7% – 28.8%    |
+| 12 months   | 6.6%      | 0.4% – 18.6%    |
 
 After 12 months of unsuccessful trying, the model estimates the couple's expected per-cycle rate has dropped to ~7% — not because their biology changed, but because the population of couples who take that long to conceive is disproportionately lower-fertility.
 
@@ -369,13 +372,13 @@ The following parameters can be configured by the user:
 |-----------|---------|-------------|
 | `female_age` | (required) | Woman's current age (18-45) |
 | `desired_children` | (required) | Target family size (1-6) |
-| `male_age` | None | Male partner age (affects miscarriage risk if ≥40) |
+| `male_age` | None | Male partner age (affects miscarriage risk if ≥35) |
 | `bmi` | None | Female BMI (affects natural conception and IVF) |
 | `smoking_status` | never | Never, former, current occasional, current regular |
 | `ivf_willingness` | last_resort | "yes", "no", or "last_resort" |
 | `cycles_before_ivf` | 12 | Months of natural trying before IVF eligibility |
 | `max_ivf_cycles` | 3 | Max fresh IVF cycles per child (resets after each live birth) |
-| `min_spacing_months` | 15 | Minimum months between births |
+| `min_spacing_months` | 18 | Minimum months after birth before resuming trying |
 | `prior_live_births` | 0 | Number of existing children |
 | `prior_miscarriages` | 0 | Consecutive miscarriages since last live birth (resets to 0 after each live birth; used to seed recurrent miscarriage risk) |
 | `cycles_tried` | 0 | Months already spent trying (shifts fecundability draws lower) |
@@ -402,6 +405,54 @@ The following parameters can be configured by the user:
 **Male BMI:** Sundaram et al. 2017 ([DOI: 10.1093/humrep/dex001](https://doi.org/10.1093/humrep/dex001)) found that individual male BMI was not associated with TTP when modeled alone — only the couple-level effect (both partners BMI ≥35) was significant. Zhang et al. 2022 ([DOI: 10.1111/jog.15299](https://doi.org/10.1111/jog.15299)) found no association between male BMI and IVF outcomes.
 
 **Intercourse frequency:** This is a meaningful factor (the base fecundability curves assume regular intercourse), but it is behavioral, variable over time, and potentially sensitive to ask about. Considered for a future version.
+
+---
+
+## Comparison with Habbema et al. 2015
+
+Our model is based on the family completion simulation framework from [Habbema et al. 2015](https://doi.org/10.1093/humrep/dev148). We match their 90% benchmark cutoff ages within ±2 years, but use different underlying data and distributional assumptions. The key differences are summarized below.
+
+### Fecundability age-decline curve
+
+We reverse-engineered Habbema's fecundability decline curve by fitting a standalone Habbema-faithful simulation (using their published sterility, miscarriage, and IVF parameters) to 114 data points digitized from their published completion rate figures across 19 starting ages × 6 scenarios (1/2/3 children × with/without IVF). The best fit (SSE=0.075, mean absolute error 2.2 percentage points) reveals a sharp decline from 0.23 at age 30 to ~0.09 at age 32, followed by a gentle decline to ~0.05 by age 44.
+
+Our model uses the Wesselink 2017 age-fecundability curves (Section 2), which decline more gradually through the 30s. Unlike Habbema's flat 23% from ages 20–30, our model also shows a mild decline starting in the mid-20s:
+
+| Age | Our model (nulligravid) | Our model (gravid) | Habbema (reverse-engineered) |
+|-----|------------------------|-------------------|------------------------------|
+| 20 | 25.0% | 25.0% | 23.0% |
+| 25 | 22.0% | 23.0% | 23.0% |
+| 30 | 20.0% | 23.8% | 23.0% |
+| 32 | 21.0% | 22.0% | 8.8% |
+| 35 | 17.0% | 24.0% | 7.7% |
+| 38 | 12.8% | 17.5% | 6.6% |
+| 42 | 5.9% | 12.6% | 5.4% |
+
+The curves converge by the early 40s but differ substantially in the early-to-mid 30s, where our model retains much higher per-cycle rates. Habbema's curve drops sharply from 23% to ~9% between ages 30 and 31, while our Wesselink-based curves decline gradually throughout.
+
+### Fecundability heterogeneity distribution
+
+Habbema uses a truncated Normal distribution with CV=0.52 for between-couple fecundability variation. Our model uses a Beta distribution with concentration=4.33, which produces CV=0.75 — 44% more between-couple spread.
+
+| Property | Our Beta(1.08, 3.25) | Habbema TruncNorm(0.23, 0.12) |
+|----------|---------------------|-------------------------------|
+| Mean | 0.25 | 0.23 |
+| CV | 0.75 | 0.52 |
+| Fraction < 5% fecundability | 12.9% | 4.0% |
+| Fraction > 40% fecundability | 21.0% | 8.0% |
+| Median | 21.0% | 23.4% |
+
+Our distribution creates ~3× more "essentially subfertile" couples (below 5% per cycle) and ~2.6× more "super-fertile" couples (above 40% per cycle). The concentration parameter (4.33) was calibrated so that these distributional differences, combined with the gentler Wesselink decline curve, produce completion rates that match Habbema's cutoff ages across all 18 benchmark scenarios with MAE = 0.92 years.
+
+However, the underlying differences in both the decline curve shape and the heterogeneity distribution mean the models may diverge at other confidence levels, particularly the 50% level where the shape of the fecundability distribution matters more than the tails.
+
+### Other differences
+
+- **Miscarriage rates:** We use Magnus et al. 2019 (Section 3), which reports higher rates than Habbema's Leridon 2004 data at older ages (32.2% at 40–44 vs ~25%). We also model recurrent miscarriage risk and male partner age effects.
+- **IVF success rates:** We use SART 2023 per-transfer live birth rates (Section 10), which are generally higher than Habbema's 2013 Netherlands data due to advances in embryo culture and vitrification.
+- **Additional ART pathways:** Frozen eggs, frozen embryos, and PGT-A tested embryos (Sections 11–12), none of which were in Habbema's model.
+- **Gravid/nulligravid distinction:** We use separate Wesselink 2017 age-decline curves based on pregnancy history (Section 2). Habbema used a single curve for all women.
+- **Configurable parameters:** Birth spacing, IVF timing, and IVF cycle caps are user-adjustable rather than hardcoded.
 
 ---
 

@@ -11,10 +11,15 @@ from .models import SmokingStatus
 _FECUNDABILITY_AGES = np.array([21, 26, 29, 32, 35, 38, 42.5], dtype=float)
 _FECUNDABILITY_FR_NULLIGRAVID = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20], dtype=float)
 _FECUNDABILITY_FR_GRAVID = np.array([1.00, 0.92, 0.95, 0.88, 0.96, 0.70, 0.48], dtype=float)
-# Base rate of 0.23 per cycle at ages 20-30, following Habbema et al. 2015 / Leridon model.
-# The PRESTO cohort (Wesselink 2017) reports ~0.25 but this likely reflects upward
-# selection bias from the study enrollment criteria.
-_BASE_FECUNDABILITY = 0.23
+# Base fecundability for the 18-24 reference group: 25% per cycle.
+# The American Society for Reproductive Medicine (ASRM) cites 25-30% per cycle
+# for women in their 20s-early 30s. The PRESTO cohort (Wesselink 2017) uses
+# ages 21-24 as the reference group with the highest fecundability ratio (1.00),
+# consistent with ~25% as the peak rate before age-related decline begins.
+# Habbema et al. 2015 uses 23%, which represents an average across ages 20-30
+# rather than a peak rate; since our model applies Wesselink age-ratio decline
+# starting from the reference group, 25% is the appropriate anchor.
+_BASE_FECUNDABILITY = 0.25
 # The gravid/nulligravid divergence at older ages is real, not an artifact.
 # Steiner & Jukic 2016 (DOI: 10.1016/j.fertnstert.2016.02.028) independently
 # corroborates this: women who have never conceived by their late 30s likely
@@ -44,10 +49,10 @@ _STERILITY_RATES = np.array([0.005, 0.01, 0.02, 0.05, 0.10, 0.17, 0.30, 0.55], d
 # Concentration parameter for individual fecundability draws.
 # Controls how much fecundability varies between couples.
 # Lower = more heterogeneity, higher = more homogeneous.
-# Calibrated against Habbema et al. 2015 benchmarks (90% cutoff ages
-# for 1/2/3 children: 32/27/23). At concentration=5.0, model produces
-# 31.6/27.7/23.9 — all within ±1 year.
-FECUNDABILITY_CONCENTRATION = 5.0
+# CV = 0.75 → concentration = 3/(0.75²) - 1 = 4.33.
+# Calibrated against Habbema et al. 2015 benchmarks (all 18 scenarios).
+# MAE = 0.92 years, max error = 2.9 years, RMSE = 1.21.
+FECUNDABILITY_CONCENTRATION = 4.33
 
 # Recurrent miscarriage odds ratios
 _RECURRENT_MC_OR = {0: 1.0, 1: 1.54, 2: 2.21}  # 3+ → 3.97

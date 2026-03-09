@@ -35,7 +35,7 @@ class SimulationParams:
     bmi: float | None = None
     acceptable_probability: float = 0.9
     ivf_willingness: Literal["yes", "no", "last_resort"] = "last_resort"
-    min_spacing_months: int = 15
+    min_spacing_months: int = 18
     prior_live_births: int = 0
     prior_miscarriages: int = 0
     cycles_tried: int = 0

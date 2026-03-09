@@ -27,7 +27,7 @@ frontend/dist/
 .env
 
 # Benchmarking / calibration scripts
-backend/scripts/
+backend/scripts/old/
 
 # IDE
 .idea/

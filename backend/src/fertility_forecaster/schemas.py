@@ -36,7 +36,7 @@ class SimulateRequest(BaseModel):
     male_age: float | None = Field(default=None, ge=18, le=70)
     bmi: float | None = Field(default=None, ge=10, le=70)
     acceptable_probability: float = Field(default=0.9, ge=0.01, le=1.0)
-    ivf_willingness: Literal["yes", "no", "last_resort"] = "no"
+    ivf_willingness: Literal["yes", "no", "last_resort"] = "last_resort"
     min_spacing_months: int = Field(default=18, ge=6, le=60)
     prior_live_births: int = Field(default=0, ge=0)
     prior_miscarriages: int = Field(default=0, ge=0)
@@ -114,7 +114,7 @@ class SweepRequest(BaseModel):
     male_age_offset: float | None = Field(default=None, ge=-20, le=20)
     bmi: float | None = Field(default=None, ge=10, le=70)
     acceptable_probability: float = Field(default=0.9, ge=0.01, le=1.0)
-    ivf_willingness: Literal["yes", "no", "last_resort"] = "no"
+    ivf_willingness: Literal["yes", "no", "last_resort"] = "last_resort"
     min_spacing_months: int = Field(default=18, ge=6, le=60)
     prior_live_births: int = Field(default=0, ge=0)
     prior_miscarriages: int = Field(default=0, ge=0)

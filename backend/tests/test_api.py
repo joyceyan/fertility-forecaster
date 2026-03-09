@@ -33,7 +33,7 @@ class TestSimulate:
         # params_used present and correct for defaults
         pu = data["params_used"]
         assert pu["curve_type"] == "nulligravid"
-        assert pu["base_fecundability"] == pytest.approx(0.23)
+        assert pu["base_fecundability"] == pytest.approx(0.25)
         assert pu["bmi_natural_fr"] == pytest.approx(1.0)
         assert pu["smoking_fr"] == pytest.approx(1.0)
 

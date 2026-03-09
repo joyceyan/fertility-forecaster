@@ -40,10 +40,22 @@ cd backend
 uvicorn fertility_forecaster.api:app --reload
 ```
 
+## Scripts
+
+Analysis and benchmarking scripts live in `scripts/`.
+
+```bash
+conda activate fertility-forecaster
+cd backend
+pip install -e .
+
+# Compare our model's cutoff ages against Habbema et al. 2015 published values
+python scripts/benchmark_habbema.py
+```
+
 ## Modules
 
 - **models.py** — `SimulationParams` and `SimulationResult` dataclasses
-- **curves.py** — Age-dependent fecundability, miscarriage, IVF success, and frozen egg curves
-- **bayesian.py** — Beta-binomial conjugate updating for personalized fecundability
+- **curves.py** — Age-dependent fecundability, miscarriage, IVF success, frozen egg curves, and Beta-distribution fecundability draws with Bayesian updating
 - **simulation.py** — Vectorized Monte Carlo simulation engine (10,000 couples × up to 180 cycles)
 - **api.py** — FastAPI endpoints (`/simulate`, `/sweep`, `/health`)

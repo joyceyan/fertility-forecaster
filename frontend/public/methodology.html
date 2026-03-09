@@ -131,7 +131,7 @@
       <h2>How the Model Works</h2>
       <p>At a high level, the simulation runs a loop for 10,000 virtual couples. For each virtual couple:</p>
       <ol>
-        <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle.</li>
+        <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 25% chance of getting pregnant each cycle.</li>
         <li>The model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers typically have lower fertility.</li>
         <li>A random draw determines whether conception occurs.</li>
         <li>If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates. This is further adjusted for any miscarriage history and male partner age, if applicable.</li>
@@ -146,12 +146,12 @@
 
       <!-- 1. Base Per-Cycle Conception Probability -->
       <h3>1. Base Per-Cycle Conception Probability</h3>
-      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Leridon, 2004 (via Habbema 2015)</a></p>
+      <p class="source-tag"><a href="https://www.reproductivefacts.org/news-and-publications/fact-sheets-and-infographics/defining-infertility/">ASRM</a> &middot; <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink et al., 2017</a> &middot; <a href="https://doi.org/10.1093/humrep/dev148">Habbema et al., 2015</a></p>
       <p>
-        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2).
+        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>25%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2).
       </p>
       <p>
-        The 23% figure is taken from Habbema et al. 2015's simulation model, which is based on historical data on monthly pregnancy chances in natural non-contraceptive populations collected by Henry (1965) and Leridon (1977).
+        The American Society for Reproductive Medicine (ASRM) cites a per-cycle conception probability of 25&ndash;30% for women in their 20s to early 30s. The Wesselink 2017 PRESTO cohort uses ages 21&ndash;24 as the reference group with the highest fecundability ratio (FR&nbsp;=&nbsp;1.00), consistent with ~25% as the peak rate before age-related decline begins. Habbema et al. 2015 uses a slightly lower figure of 23%, but that represents an average across ages 20&ndash;30, not a peak rate. Since our model applies Wesselink&rsquo;s age-ratio decline starting from this reference group, applying those ratios to a 25% base produces an average of approximately 23% across ages 20&ndash;30 &mdash; consistent with Habbema.
       </p>
 
       <!-- 2. Age-Specific Adjustment -->
@@ -166,8 +166,8 @@
       <script>
       (function() {
         var labels = ['18–24', '25–27', '28–30', '31–33', '34–36', '37–39', '40–45'];
-        var nulligravid = [23.0, 20.2, 18.4, 19.3, 15.6, 11.7, 4.6];
-        var gravid = [23.0, 21.2, 21.9, 20.2, 22.1, 16.1, 11.0];
+        var nulligravid = [25.0, 22.0, 20.0, 21.0, 17.0, 12.8, 5.0];
+        var gravid = [25.0, 23.0, 23.8, 22.0, 24.0, 17.5, 12.0];
         new Chart(document.getElementById('ageFecundabilityChart'), {
           type: 'line',
           data: {
@@ -252,7 +252,7 @@
       })();
       </script>
       <p>
-        <strong>Why the difference?</strong> Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy, regardless of whether the pregnancy resulted in a live birth or miscarriage. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant. A 35-year-old who has been pregnant before has about 22% odds per cycle, versus about 16% for someone who hasn't.
+        <strong>Why the difference?</strong> Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy, regardless of whether the pregnancy resulted in a live birth or miscarriage. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant. A 35-year-old who has been pregnant before has about 24% odds per cycle, versus about 17% for someone who hasn't.
       </p>
       <p>
         In our model, which curve is used depends on whether <em>you</em> report a prior pregnancy (live birth or miscarriage) when setting up the simulation. If you do, all 10,000 virtual couples use the &ldquo;been pregnant before&rdquo; curve for the entire run. If you don't, they all use the &ldquo;never been pregnant&rdquo; curve &mdash; even after conceiving within the simulation. This is because the simulation's own filtering already handles the selection effect: couples who conceive quickly are inherently more fertile (via their individual fertility draw), so they naturally perform better on subsequent children without needing the gravid curve's boost.
@@ -369,10 +369,10 @@
       <h3>8. Individual Variation Between Couples</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dey317">van Eekelen et al., 2018</a></p>
       <p>
-        Not every couple has the same fertility. The 23% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity).
+        Not every couple has the same fertility. The 25% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity).
       </p>
       <p>
-        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life and it represents their inherent &ldquo;fertility type.&rdquo; The chart below shows a Beta distribution of how these rates are distributed across couples. The dots mark the 5th, 25th, 50th, 75th, and 95th percentiles. The dashed line marks the 23% population mean. Hover over the curve for details.
+        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life and it represents their inherent &ldquo;fertility type.&rdquo; The chart below shows a Beta distribution of how these rates are distributed across couples. The dots mark the 5th, 25th, 50th, 75th, and 95th percentiles. The dashed line marks the 25% population mean. Hover over the curve for details.
       </p>
       <div style="position: relative; margin: 1.5rem 0;">
         <canvas id="fecundabilityChart"></canvas>
@@ -394,7 +394,7 @@
           if (x <= 0 || x >= 1) return 0;
           return Math.exp((a-1)*Math.log(x) + (b-1)*Math.log(1-x) - lnGamma(a) - lnGamma(b) + lnGamma(a+b));
         }
-        var a = 1.15, b = 3.85, N = 300;
+        var a = 1.08, b = 3.25, N = 300;
         var curve = [], cdf = [];
         var cum = 0;
         for (var i = 0; i <= N; i++) {
@@ -404,16 +404,16 @@
           cdf.push(Math.min(cum, 1));
         }
         var pctInfo = [
-          { x: 2.1, pct: '5th percentile' },
-          { x: 9.2, pct: '25th percentile' },
-          { x: 19.3, pct: '50th (median)' },
-          { x: 33.4, pct: '75th percentile' },
-          { x: 56.7, pct: '95th percentile' }
+          { x: 2.0, pct: '5th percentile' },
+          { x: 9.7, pct: '25th percentile' },
+          { x: 21.0, pct: '50th (median)' },
+          { x: 36.6, pct: '75th percentile' },
+          { x: 61.7, pct: '95th percentile' }
         ];
         var pctData = pctInfo.map(function(p) {
           return { x: p.x, y: betaPDF(p.x / 100, a, b) };
         });
-        var meanData = [{ x: 23, y: 0 }, { x: 23, y: betaPDF(0.23, a, b) }];
+        var meanData = [{ x: 25, y: 0 }, { x: 25, y: betaPDF(0.25, a, b) }];
         new Chart(document.getElementById('fecundabilityChart'), {
           type: 'scatter',
           data: {
@@ -512,9 +512,9 @@
           <tr><th>Months trying</th><th>Estimated average rate</th><th>Likely range (middle 90%)</th></tr>
         </thead>
         <tbody>
-          <tr><td>0 (just starting)</td><td>23.0%</td><td>2.1% &ndash; 56.7%</td></tr>
-          <tr><td>6 months</td><td>10.5%</td><td>0.8% &ndash; 28.2%</td></tr>
-          <tr><td>12 months</td><td>6.8%</td><td>0.5% &ndash; 18.6%</td></tr>
+          <tr><td>0 (just starting)</td><td>25.0%</td><td>2.0% &ndash; 61.7%</td></tr>
+          <tr><td>6 months</td><td>10.5%</td><td>0.7% &ndash; 28.8%</td></tr>
+          <tr><td>12 months</td><td>6.6%</td><td>0.4% &ndash; 18.6%</td></tr>
         </tbody>
       </table>
 
@@ -712,36 +712,145 @@
         </tbody>
       </table>
       <p>
-        Our model uses the same core simulation approach and matches Habbema's benchmark cutoff ages within &plusmn;2 years, but extends it in several ways:
+        Our model uses the same core simulation approach, but uses newer data and extends it in several ways:
+      </p>
+
+      <h3>Different age-decline curve</h3>
+      <p>
+        A key difference between our model and Habbema's is how quickly natural conception rates decline with age. We reverse-engineered Habbema's fecundability decline curve by fitting a standalone simulation to their published completion rate data (114 data points across 19 starting ages &times; 6 scenarios). The best-fit curve shows a sharp drop from their average of 23% at age 30 to roughly 9% at age 31 (a ~60% decline in 1 year), followed by a gentle decline to ~5% by age 44.
+      </p>
+      <p>
+        Our model uses the <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink 2017</a> age-fecundability curves, which decline more gradually through the 30s. Unlike Habbema, our model also shows a mild decline from ages 20&ndash;30, and uses separate curves for women who have and haven't been pregnant before:
+      </p>
+      <div style="position: relative; margin: 1.5rem 0;">
+        <canvas id="fecundDeclineComparisonChart"></canvas>
+      </div>
+      <script>
+      (function() {
+        var ages = [20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45];
+        var oursNulligravid = [25.0,25.0,24.4,23.8,23.2,22.6,22.0,21.3,20.7,20.0,20.3,20.7,21.0,19.7,18.3,17.0,15.6,14.2,12.8,11.0,9.3,7.6,5.9,5.0,5.0,5.0];
+        var oursGravid = [25.0,25.0,24.6,24.2,23.8,23.4,23.0,23.2,23.5,23.8,23.2,22.6,22.0,22.7,23.3,24.0,21.8,19.7,17.5,16.3,15.1,13.8,12.6,12.0,12.0,12.0];
+        var habbema = [23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,9.2,8.8,8.4,8.0,7.7,7.3,7.0,6.6,6.3,6.0,5.7,5.4,5.1,4.8,4.6];
+        new Chart(document.getElementById('fecundDeclineComparisonChart'), {
+          type: 'line',
+          data: {
+            labels: ages,
+            datasets: [
+              {
+                label: 'Our model (never pregnant)',
+                data: oursNulligravid,
+                borderColor: 'rgb(130, 80, 170)',
+                backgroundColor: 'rgba(130, 80, 170, 0.06)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointBackgroundColor: 'rgb(130, 80, 170)',
+                fill: false,
+                tension: 0.3
+              },
+              {
+                label: 'Our model (been pregnant)',
+                data: oursGravid,
+                borderColor: 'rgb(55, 130, 110)',
+                backgroundColor: 'rgba(55, 130, 110, 0.06)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointBackgroundColor: 'rgb(55, 130, 110)',
+                fill: false,
+                tension: 0.3
+              },
+              {
+                label: 'Habbema (reverse-engineered)',
+                data: habbema,
+                borderColor: 'rgb(180, 100, 60)',
+                borderWidth: 2.5,
+                borderDash: [6, 3],
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointBackgroundColor: 'rgb(180, 100, 60)',
+                fill: false,
+                tension: 0.1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                align: 'end',
+                labels: {
+                  boxWidth: 20,
+                  padding: 15,
+                  font: { size: 12, family: "'Inter', system-ui, sans-serif" },
+                  color: '#57534e',
+                  usePointStyle: false
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(28, 25, 23, 0.92)',
+                titleFont: { size: 13, weight: '600' },
+                bodyFont: { size: 12 },
+                padding: { x: 12, y: 8 },
+                cornerRadius: 6,
+                callbacks: {
+                  title: function(items) { return 'Age ' + items[0].label; },
+                  label: function(item) {
+                    return item.dataset.label + ': ' + item.parsed.y.toFixed(1) + '% per cycle';
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Age', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { color: '#78716c', font: { size: 11 }, maxTicksLimit: 14 },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              },
+              y: {
+                min: 0, max: 28,
+                title: { display: true, text: 'Per-cycle conception rate', font: { size: 12, weight: '500' }, color: '#57534e' },
+                ticks: { stepSize: 5, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
+                grid: { color: 'rgba(231, 229, 228, 0.6)' }
+              }
+            }
+          }
+        });
+      })();
+      </script>
+      <p>
+        The curves converge by the early 40s but differ substantially in the early-to-mid 30s, where our model retains much higher per-cycle rates. Habbema's curve averages 23% from ages 20&ndash;30 and then drops sharply, while our model starts at 25% for the 18&ndash;24 reference group and shows a mild, gradual decline through the late 20s and 30s based on Wesselink&rsquo;s fecundability ratios.
+      </p>
+      <p>
+        This is partially offset by a difference in how fecundability varies between couples: Habbema uses a truncated Normal distribution with a coefficient of variation (CV) of 0.52, while our model uses a Beta distribution with a CV of 0.75 &mdash; meaning we model 44% more between-couple spread. The extra heterogeneity in our model creates more very-low-fertility couples (~13% below 5% per cycle, vs. ~4% in Habbema's), which pulls down completion rates at high confidence levels despite the higher mean fecundability.
+      </p>
+      <p>
+        The concentration parameter in our Beta distribution (4.33) was calibrated against all 18 Habbema benchmark scenarios (1&ndash;3 children &times; 50/75/90% thresholds &times; with/without IVF), achieving a mean absolute error of 0.92 years and a maximum error of 2.9 years.
+      </p>
+      <p>
+        Finally, if you report a prior pregnancy, our model uses the more favorable &ldquo;been pregnant before&rdquo; curve for the entire run. This is not incorporated in Habbema's model.
       </p>
 
       <h3>Newer miscarriage data</h3>
       <p>
-        Habbema used miscarriage rates from Leridon 2004, which were based on older data. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, a registry study of 421,201 pregnancies in Norway with more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1093/humupd/dmaa010">male partner age</a> on miscarriage, which Habbema did not model.
+        Habbema used miscarriage rates from a study in 2004. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, which has more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1093/humupd/dmaa010">male partner age</a> on miscarriage, which Habbema did not model.
       </p>
       <p>
-        Our miscarriage rates are notably more pessimistic than Habbema's at older ages. Habbema/Leridon assumed ~25% at age 40 and ~35% at age 45, while Magnus 2019 reports 32.2% at 40&ndash;44 and 53.6% at 45+. This divergence is most pronounced above age 42 and contributes to our model being slightly more conservative for late starters at moderate confidence levels.
+        Our miscarriage rates are notably more pessimistic than Habbema's at older ages. Habbema's paper assumed ~25% at age 40 and ~35% at age 45, while Magnus 2019 reports 32.2% at 40&ndash;44 and 53.6% at 45+.
       </p>
 
       <h3>Newer IVF data</h3>
       <p>
-        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>, pooling fresh blastocyst and cleavage-stage transfers weighted by volume to reflect the actual mix of protocols patients experience.
+        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>.
       </p>
 
       <h3>Frozen eggs, frozen embryos, and PGT-A</h3>
       <p>
         Habbema's model included fresh IVF as the only assisted reproduction option. Ours adds frozen egg batches (with age-at-freeze-dependent per-oocyte rates from <a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a> and <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>), frozen embryo batches, and PGT-A tested embryos. All frozen embryo and PGT-A transfer rates come from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>, stratified by age at retrieval. Users can enter their actual frozen inventory and the model will use it before falling back to fresh IVF.
-      </p>
-
-      <h3>Pregnancy history affects age-related decline</h3>
-      <p>
-        Habbema used a single age-decline curve for all women. We use two separate curves from <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink 2017</a>: one for women who have never been pregnant, and one for women who have been pregnant before (see Section 2). The difference is large &mdash; at age 35, a woman who has been pregnant before retains about 96% of her baseline fertility, versus 68% for someone who hasn't. This isn't because pregnancy itself improves fertility; it's because women who have never conceived by their late 30s are more likely to include those with undiagnosed subfertility conditions, which drags the group average down.
-      </p>
-      <p>
-        The curve is chosen once at initialization based on what you report, not updated mid-simulation. If you tell the model you've had a prior pregnancy, all simulated couples use the more favorable &ldquo;been pregnant before&rdquo; curve for the entire run. If you haven't, they use the &ldquo;never been pregnant&rdquo; curve throughout &mdash; the simulation's own individual fertility draws already capture the selection effect (couples who conceive quickly are inherently more fertile and will continue to be for subsequent children).
-      </p>
-      <p>
-        In practice, this makes our model <strong>more optimistic for second and third children when you report a prior pregnancy</strong> compared to Habbema, because the &ldquo;been pregnant before&rdquo; curve shows much less age-related decline.
       </p>
 
       <h3>BMI and smoking adjustments</h3>
@@ -754,7 +863,7 @@
         Habbema's model hard-codes several assumptions:
       </p>
       <ul>
-        <li>Couples wait at least 15 months after the birth of a child before trying for the next pregnancy.</li>
+        <li>Couples wait at least 18 months after the birth of a child before trying for the next pregnancy.</li>
         <li>IVF begins after 3 years of unsuccessful natural trying if the woman is under 33, 2 years if she is between 33 and 38, or 1 year if she is 38 or older.</li>
         <li>Only 3 IVF cycles are attempted per child.</li>
       </ul>
@@ -780,8 +889,13 @@
         This model gives you population-level estimates. Your individual situation depends on many factors it can't measure, including ovarian reserve (AMH), specific conditions like PCOS or endometriosis, sperm quality, and genetic factors. The model assumes no underlying fertility diagnoses beyond what's captured by age, BMI, smoking, and reproductive history.
       </p>
       <p>
-        The data comes primarily from North American and Northern European populations. Results may not apply equally across all backgrounds.
+        The data comes primarily from North American and Northern European populations. Results may not apply equally across all backgrounds. Additionally, the model doesn't take into consideration:
       </p>
+      <ul>
+        <li>Multiple births (twins, triplets, etc.) which will affect family completion rates. This is rare enough that it's not worth modeling.</li>
+        <li>Fertility drugs like clomid, letrozole, metformin, etc. which may improve your individual fertility outcomes.</li>
+        <li>Intraurine Insemination (IUI) which is less effective than IVF but significantly cheaper and less invasive. Many couples may choose IUI before IVF, but there isn't a lot of data on how effective IUI is, especially as it relates to age-related decline.</li>
+      </ul>
       <h3>About the creator</h3>
       <p>
         Fertility Forecaster was built by a software engineer, not a fertility researcher or statistician. I have no professional background in reproductive medicine or statistics beyond two college-level statistics courses taken as part of a computer science degree, plus eight years of professional software engineering experience. Mostly, I'm a mom who wished this type of information had been available when I was in my 20s and trying to figure out whether to freeze my eggs, when to start trying, and how to think about the tradeoffs.
