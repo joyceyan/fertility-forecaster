@@ -125,7 +125,7 @@
       <!-- Overview -->
       <h2>Overview</h2>
       <p>
-        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>When should I start trying to conceive? How much does IVF improve my chances? Should I freeze my eggs?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
+        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>When should I start trying to conceive? What is the cost of waiting 1 or 2 more years? How much does IVF improve my chances? Should I freeze my eggs?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
 
       <!-- How the Model Works -->
       <h2>How the Model Works</h2>
@@ -148,7 +148,7 @@
       <h3>1. Base Per-Cycle Conception Probability</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Habbema et al. 2015</a></p>
       <p>
-        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2). This figure is consistent across all three sources cited above.
+        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age.
       </p>
 
       <!-- 2. Age-Specific Adjustment -->
@@ -658,7 +658,7 @@
 
       <h2>Comparison with Habbema et al. 2015</h2>
       <p>
-        Fertility Forecaster's model is based on the family completion modeling approach from <a href="https://doi.org/10.1093/humrep/dev148">Habbema et al. 2015</a>, the standard reference for &ldquo;when should couples start trying?&rdquo; That study simulated 10,000 virtual couples cycle-by-cycle to calculate the latest age you can start trying and still have a given probability of completing your family:
+        Fertility Forecaster's model is based on the family completion modeling approach from <a href="https://doi.org/10.1093/humrep/dev148">Habbema et al. 2015</a>, which produced this table:
       </p>
       <table>
         <thead>
@@ -679,9 +679,12 @@
         Our model uses the same core simulation approach, but uses newer data and extends it in several ways:
       </p>
 
-      <h3>Different age-decline curve</h3>
+      <h3>Different distribution of base fertility rates and age-decline curve</h3>
       <p>
-        A key difference is how quickly natural conception rates decline with age. We reverse-engineered Habbema's decline curve from their published data. Their curve holds steady at 23% until age 30 and then drops sharply to ~9% at age 31. Our model uses newer data that shows a more gradual decline through the 30s, and uses separate curves for women who have and haven't been pregnant before:
+        A key difference is how quickly natural conception rates decline with age. Our model uses newer data that shows a more gradual decline through the 30s, and uses separate curves for women who have and haven't been pregnant before:
+      </p>
+      <p>
+        Habbema's paper reports they use an average 23% per-cycle fertility rate from ages 20-30, and otherwise does not explain how they model their age-decline curve. I reverse-engineered their age decline curve from their published data, which shows a sharp drop to ~9% at age 31. They may use a more gentle age-decline curve from 20 to 30 that still averages out to 23%, but this should still work out to a < 10% per-cycle fertility rate past 30.
       </p>
       <div style="position: relative; margin: 1.5rem 0;">
         <canvas id="fecundDeclineComparisonChart"></canvas>
@@ -785,10 +788,10 @@
       })();
       </script>
       <p>
-        The curves converge by the early 40s but differ substantially in the early-to-mid 30s, where our model retains much higher per-cycle rates.
+        The curves converge by the early 40s but differ substantially in the 30s, where our model retains much higher per-cycle rates.
       </p>
       <p>
-        This is partially offset by how we model variation between couples. Our model assigns a wider spread of individual fertility rates than Habbema's &mdash; creating more very-low-fertility couples (~16% below 5% per cycle, vs. ~4% in Habbema's). This pulls down completion rates at high confidence levels. We calibrated this spread against all 18 of Habbema's benchmark scenarios and match their results within about 1 year on average.
+        Additionally, we model the spread of base fertility rates differently. Based on reverse-engineering Habbema's model, we found they most likely use a normal distribution and account for subfertile and sterile couples by adding in a sterility curve. Our model does not use a sterility curve and instead uses a beta-genomic distribution and assigns a wider spread of individual fertility rates than Habbema's &mdash; creating more very-low-fertility couples to account for the fact that we don't model sterility directly.
       </p>
       <p>
         Additionally, if you report a prior pregnancy, our model uses the more favorable &ldquo;been pregnant before&rdquo; curve. Habbema's model does not make this distinction.
@@ -819,7 +822,7 @@
         Habbema's model hard-codes several assumptions:
       </p>
       <ul>
-        <li>Couples wait at least 18 months after the birth of a child before trying for the next pregnancy.</li>
+        <li>Couples wait at least 15 months after the birth of a child before trying for the next pregnancy.</li>
         <li>IVF begins after 3 years of unsuccessful natural trying if the woman is under 33, 2 years if she is between 33 and 38, or 1 year if she is 38 or older.</li>
         <li>Only 3 IVF cycles are attempted per child.</li>
       </ul>

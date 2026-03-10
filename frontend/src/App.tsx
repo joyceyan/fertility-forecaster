@@ -130,7 +130,7 @@ export default function App() {
                 </svg>
               </div>
               <p className="text-sm font-medium text-stone-600">
-                Find out your chances of getting pregnant at your age
+                Find out your chances of completing your family
               </p>
               <p className="mt-1 text-xs text-stone-400">
                 Enter your age and family goals, then click "Calculate My Odds" to see your personalized fertility forecast
