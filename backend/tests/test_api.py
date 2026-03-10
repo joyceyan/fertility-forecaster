@@ -85,7 +85,6 @@ class TestSimulate:
                 "female_age": 30,
                 "desired_children": 2,
                 "prior_live_births": 1,
-                "age_at_last_birth": 27,
             },
         )
         assert resp.status_code == 200
@@ -104,16 +103,6 @@ class TestSimulate:
         )
         assert resp.status_code == 422
 
-        # age_at_last_birth > female_age
-        resp = client.post(
-            "/simulate",
-            json={
-                "female_age": 25,
-                "desired_children": 1,
-                "age_at_last_birth": 30,
-            },
-        )
-        assert resp.status_code == 422
 
 
 class TestSweep:

@@ -162,21 +162,15 @@ def _build_sweep_params(
     if req.male_age_offset is not None:
         overrides["male_age"] = female_age + req.male_age_offset
 
-    # Skip history conditioning when female_age is younger than reported events
-    age_at_last_birth = req.age_at_last_birth
+    # Skip history when sweep age is younger than when the event happened
     prior_live_births = req.prior_live_births
-    if age_at_last_birth is not None and female_age < age_at_last_birth:
-        age_at_last_birth = None
+    if req.age_at_last_birth is not None and female_age < req.age_at_last_birth:
         prior_live_births = 0
-    overrides["age_at_last_birth"] = age_at_last_birth
     overrides["prior_live_births"] = prior_live_births
 
-    age_at_last_miscarriage = req.age_at_last_miscarriage
     prior_miscarriages = req.prior_miscarriages
-    if age_at_last_miscarriage is not None and female_age < age_at_last_miscarriage:
-        age_at_last_miscarriage = None
+    if req.age_at_last_miscarriage is not None and female_age < req.age_at_last_miscarriage:
         prior_miscarriages = 0
-    overrides["age_at_last_miscarriage"] = age_at_last_miscarriage
     overrides["prior_miscarriages"] = prior_miscarriages
 
     if not include_frozen:
@@ -200,8 +194,6 @@ def _build_sweep_params(
         smoking_status=req.smoking_status,
         frozen_egg_batches=req.frozen_egg_batches if include_frozen else [],
         frozen_embryo_batches=req.frozen_embryo_batches if include_frozen else [],
-        age_at_last_birth=age_at_last_birth,
-        age_at_last_miscarriage=age_at_last_miscarriage,
     )
     return sim_req.to_simulation_params(num_simulations=5_000)
 

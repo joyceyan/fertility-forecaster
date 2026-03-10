@@ -44,8 +44,6 @@ class SimulationParams:
     smoking_status: SmokingStatus = SmokingStatus.NEVER
     frozen_egg_batches: tuple[FrozenEggBatch, ...] = ()
     frozen_embryo_batches: tuple[FrozenEmbryoBatch, ...] = ()
-    age_at_last_birth: float | None = None
-    age_at_last_miscarriage: float | None = None
     num_simulations: int = 10_000
 
     def __post_init__(self) -> None:

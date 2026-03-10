@@ -359,8 +359,6 @@ The following parameters can be configured by the user:
 | `cycles_tried` | 0 | Months already spent trying (shifts fecundability draws lower) |
 | `frozen_egg_batches` | () | Batches of frozen eggs (age at freeze, count) |
 | `frozen_embryo_batches` | () | Batches of frozen embryos (age at freeze, count) |
-| `age_at_last_birth` | None | Age at most recent live birth |
-| `age_at_last_miscarriage` | None | Age at most recent miscarriage |
 | `num_simulations` | 10,000 | Number of Monte Carlo couples |
 
 ---

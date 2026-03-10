@@ -98,8 +98,6 @@ class SimulateRequest(BaseModel):
             smoking_status=smoking,
             frozen_egg_batches=frozen_eggs,
             frozen_embryo_batches=frozen_embryos,
-            age_at_last_birth=self.age_at_last_birth,
-            age_at_last_miscarriage=self.age_at_last_miscarriage,
         )
         base.update(overrides)
         return SimulationParams(**base)
