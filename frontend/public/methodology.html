@@ -125,19 +125,19 @@
       <!-- Overview -->
       <h2>Overview</h2>
       <p>
-        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>What are my odds of getting pregnant at 35? Should I freeze my eggs? When should I start trying to conceive? How much does IVF improve my chances?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
+        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>When should I start trying to conceive? How much does IVF improve my chances? Should I freeze my eggs?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
 
       <!-- How the Model Works -->
       <h2>How the Model Works</h2>
       <p>At a high level, the simulation runs a loop for 10,000 virtual couples. For each virtual couple:</p>
       <ol>
-        <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 25% chance of getting pregnant each cycle.</li>
+        <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle.</li>
         <li>The model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers typically have lower fertility.</li>
         <li>A random draw determines whether conception occurs.</li>
         <li>If conception occurs, a second random draw determines whether the pregnancy results in a live birth or miscarriage, based on age-dependent miscarriage rates. This is further adjusted for any miscarriage history and male partner age, if applicable.</li>
         <li>If the couple fails to conceive naturally for a configurable number of cycles (default 12) and is open to IVF, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF.</li>
         <li>If the couple exhausts all fresh IVF attempts for that child (default 3 cycles per child), they return to natural conception. The IVF cycle counter resets after each live birth, so the couple can try IVF again for subsequent children. Frozen embryo and frozen egg cycles do not count toward this cap.</li>
-        <li>The loop repeats until the couple achieves their desired number of children or the woman turns 45.</li>
+        <li>The loop repeats until the couple achieves their desired number of children or the woman turns 50.</li>
       </ol>
       <p>After simulating all 10,000 couples, the model reports what percentage achieved the desired family size.</p>
 
@@ -146,12 +146,9 @@
 
       <!-- 1. Base Per-Cycle Conception Probability -->
       <h3>1. Base Per-Cycle Conception Probability</h3>
-      <p class="source-tag"><a href="https://www.reproductivefacts.org/news-and-publications/fact-sheets-and-infographics/defining-infertility/">ASRM</a> &middot; <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink et al., 2017</a> &middot; <a href="https://doi.org/10.1093/humrep/dev148">Habbema et al., 2015</a></p>
+      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Habbema et al. 2015</a></p>
       <p>
-        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>25%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2).
-      </p>
-      <p>
-        The American Society for Reproductive Medicine (ASRM) cites a per-cycle conception probability of 25&ndash;30% for women in their 20s to early 30s. The Wesselink 2017 PRESTO cohort uses ages 21&ndash;24 as the reference group with the highest fecundability ratio (FR&nbsp;=&nbsp;1.00), consistent with ~25% as the peak rate before age-related decline begins. Habbema et al. 2015 uses a slightly lower figure of 23%, but that represents an average across ages 20&ndash;30, not a peak rate. Since our model applies Wesselink&rsquo;s age-ratio decline starting from this reference group, applying those ratios to a 25% base produces an average of approximately 23% across ages 20&ndash;30 &mdash; consistent with Habbema.
+        The starting per-cycle chance of getting pregnant naturally, before any adjustments for age, BMI, or smoking. We set this at <strong>23%</strong> for the youngest women in the model (ages 18&ndash;24). From there, it declines with age (see Section 2). This figure is consistent across all three sources cited above.
       </p>
 
       <!-- 2. Age-Specific Adjustment -->
@@ -166,8 +163,8 @@
       <script>
       (function() {
         var labels = ['18–24', '25–27', '28–30', '31–33', '34–36', '37–39', '40–45'];
-        var nulligravid = [25.0, 22.0, 20.0, 21.0, 17.0, 12.8, 5.0];
-        var gravid = [25.0, 23.0, 23.8, 22.0, 24.0, 17.5, 12.0];
+        var nulligravid = [23.0, 20.2, 18.4, 19.3, 15.6, 11.7, 4.6];
+        var gravid = [23.0, 21.2, 21.8, 20.2, 22.1, 16.1, 11.0];
         new Chart(document.getElementById('ageFecundabilityChart'), {
           type: 'line',
           data: {
@@ -176,11 +173,11 @@
               {
                 label: 'Never been pregnant',
                 data: nulligravid,
-                borderColor: 'rgb(130, 80, 170)',
-                backgroundColor: 'rgba(130, 80, 170, 0.08)',
+                borderColor: 'rgb(212, 165, 116)',
+                backgroundColor: 'rgba(212, 165, 116, 0.08)',
                 borderWidth: 2.5,
                 pointRadius: 5,
-                pointBackgroundColor: 'rgb(130, 80, 170)',
+                pointBackgroundColor: 'rgb(212, 165, 116)',
                 pointBorderColor: '#fafaf9',
                 pointBorderWidth: 2,
                 pointHoverRadius: 7,
@@ -190,11 +187,11 @@
               {
                 label: 'Been pregnant before',
                 data: gravid,
-                borderColor: 'rgb(55, 130, 110)',
-                backgroundColor: 'rgba(55, 130, 110, 0.08)',
+                borderColor: 'rgb(124, 111, 138)',
+                backgroundColor: 'rgba(124, 111, 138, 0.08)',
                 borderWidth: 2.5,
                 pointRadius: 5,
-                pointBackgroundColor: 'rgb(55, 130, 110)',
+                pointBackgroundColor: 'rgb(124, 111, 138)',
                 pointBorderColor: '#fafaf9',
                 pointBorderWidth: 2,
                 pointHoverRadius: 7,
@@ -226,6 +223,7 @@
                 bodyFont: { size: 12 },
                 padding: { x: 12, y: 8 },
                 cornerRadius: 6,
+                itemSort: function(a, b) { return b.parsed.y - a.parsed.y; },
                 callbacks: {
                   title: function(items) { return 'Ages ' + items[0].label; },
                   label: function(item) {
@@ -241,7 +239,7 @@
                 grid: { color: 'rgba(231, 229, 228, 0.6)' }
               },
               y: {
-                min: 0, max: 28,
+                min: 0, max: 26,
                 title: { display: true, text: 'Per-cycle conception rate', font: { size: 12, weight: '500' }, color: '#57534e' },
                 ticks: { stepSize: 5, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
                 grid: { color: 'rgba(231, 229, 228, 0.6)' }
@@ -252,13 +250,13 @@
       })();
       </script>
       <p>
-        <strong>Why the difference?</strong> Women who have conceived at least once have demonstrated that their reproductive system can achieve pregnancy, regardless of whether the pregnancy resulted in a live birth or miscarriage. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down. This is a real selection effect, independently confirmed by two separate studies (Wesselink 2017 and <a href="https://doi.org/10.1016/j.fertnstert.2016.02.028">Steiner &amp; Jukic 2016</a>). By the late 30s, this gap becomes very significant. A 35-year-old who has been pregnant before has about 24% odds per cycle, versus about 17% for someone who hasn't.
+        <strong>Why the difference?</strong> Women who have conceived before have demonstrated that their reproductive system can achieve pregnancy. Women who have never been pregnant include some who may have undiagnosed fertility issues (like blocked tubes or ovulation problems), which drags the group average down.
       </p>
       <p>
-        In our model, which curve is used depends on whether <em>you</em> report a prior pregnancy (live birth or miscarriage) when setting up the simulation. If you do, all 10,000 virtual couples use the &ldquo;been pregnant before&rdquo; curve for the entire run. If you don't, they all use the &ldquo;never been pregnant&rdquo; curve &mdash; even after conceiving within the simulation. This is because the simulation's own filtering already handles the selection effect: couples who conceive quickly are inherently more fertile (via their individual fertility draw), so they naturally perform better on subsequent children without needing the gravid curve's boost.
+        Which curve the model uses depends on whether <em>you</em> report a prior pregnancy when setting up the simulation. If you do, the &ldquo;been pregnant before&rdquo; curve is used. If you don't, the &ldquo;never been pregnant&rdquo; curve is used for the entire run.
       </p>
       <p>
-        Note that male age does not meaningfully affect conception odds after controlling for female age. Our model only factors male age into miscarriage risk (see Section 4).
+        Male age does not meaningfully affect conception odds. Our model only factors male age into miscarriage risk (see Section 4).
       </p>
 
       <!-- 3. Miscarriage -->
@@ -314,9 +312,6 @@
           <tr><td>45+</td><td>1.43&times;</td></tr>
         </tbody>
       </table>
-      <p>
-        The father's age does not affect the odds of getting pregnant, only whether the pregnancy carries to term.
-      </p>
 
       <!-- 5. BMI -->
       <h3>5. BMI and Natural Conception</h3>
@@ -369,10 +364,10 @@
       <h3>8. Individual Variation Between Couples</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dey317">van Eekelen et al., 2018</a></p>
       <p>
-        Not every couple has the same fertility. The 25% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity).
+        Not every couple has the same fertility. The 23% average is just that &mdash; an average. Some couples are naturally more fertile, and some less so, due to factors the model can't directly measure (like ovarian reserve, sperm quality, or uterine receptivity). We use a beta distribution to model the variation.
       </p>
       <p>
-        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life and it represents their inherent &ldquo;fertility type.&rdquo; The chart below shows a Beta distribution of how these rates are distributed across couples. The dots mark the 5th, 25th, 50th, 75th, and 95th percentiles. The dashed line marks the 25% population mean. Hover over the curve for details.
+        To handle this, each simulated couple is randomly assigned a personal fertility rate at the start. That rate is fixed for life and represents their inherent &ldquo;fertility type.&rdquo; The chart below shows how these rates are distributed across couples. The dots mark the 5th, 25th, 50th, 75th, and 95th percentiles. The dashed line marks the 23% population mean. Hover over the curve for details.
       </p>
       <div style="position: relative; margin: 1.5rem 0;">
         <canvas id="fecundabilityChart"></canvas>
@@ -394,7 +389,7 @@
           if (x <= 0 || x >= 1) return 0;
           return Math.exp((a-1)*Math.log(x) + (b-1)*Math.log(1-x) - lnGamma(a) - lnGamma(b) + lnGamma(a+b));
         }
-        var a = 1.08, b = 3.25, N = 300;
+        var a = 0.97, b = 3.26, N = 300;
         var curve = [], cdf = [];
         var cum = 0;
         for (var i = 0; i <= N; i++) {
@@ -404,16 +399,16 @@
           cdf.push(Math.min(cum, 1));
         }
         var pctInfo = [
-          { x: 2.0, pct: '5th percentile' },
-          { x: 9.7, pct: '25th percentile' },
-          { x: 21.0, pct: '50th (median)' },
-          { x: 36.6, pct: '75th percentile' },
-          { x: 61.7, pct: '95th percentile' }
+          { x: 1.4, pct: '5th percentile' },
+          { x: 8.0, pct: '25th percentile' },
+          { x: 18.6, pct: '50th (median)' },
+          { x: 34.0, pct: '75th percentile' },
+          { x: 59.6, pct: '95th percentile' }
         ];
         var pctData = pctInfo.map(function(p) {
           return { x: p.x, y: betaPDF(p.x / 100, a, b) };
         });
-        var meanData = [{ x: 25, y: 0 }, { x: 25, y: betaPDF(0.25, a, b) }];
+        var meanData = [{ x: 23, y: 0 }, { x: 23, y: betaPDF(0.23, a, b) }];
         new Chart(document.getElementById('fecundabilityChart'), {
           type: 'scatter',
           data: {
@@ -512,39 +507,15 @@
           <tr><th>Months trying</th><th>Estimated average rate</th><th>Likely range (middle 90%)</th></tr>
         </thead>
         <tbody>
-          <tr><td>0 (just starting)</td><td>25.0%</td><td>2.0% &ndash; 61.7%</td></tr>
-          <tr><td>6 months</td><td>10.5%</td><td>0.7% &ndash; 28.8%</td></tr>
-          <tr><td>12 months</td><td>6.6%</td><td>0.4% &ndash; 18.6%</td></tr>
+          <tr><td>0 (just starting)</td><td>23.0%</td><td>1.4% &ndash; 59.6%</td></tr>
+          <tr><td>6 months</td><td>9.5%</td><td>0.5% &ndash; 27.3%</td></tr>
+          <tr><td>12 months</td><td>6.0%</td><td>0.3% &ndash; 17.6%</td></tr>
         </tbody>
       </table>
 
-      <!-- 9. Sterility -->
-      <h3>9. Permanent Sterility</h3>
-      <p class="source-tag"><a href="https://doi.org/10.1093/humrep/dev148">Leridon, 2004 (via Habbema 2015)</a></p>
-      <p>
-        A small percentage of women become permanently unable to conceive naturally at each age (due to things like premature ovarian failure). This is separate from the gradual age-related decline; it's an all-or-nothing threshold:
-      </p>
-      <table>
-        <thead>
-          <tr><th>Age</th><th>Chance of permanent sterility</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>25</td><td>1%</td></tr>
-          <tr><td>30</td><td>2%</td></tr>
-          <tr><td>35</td><td>5%</td></tr>
-          <tr><td>38</td><td>10%</td></tr>
-          <tr><td>40</td><td>17%</td></tr>
-          <tr><td>42</td><td>30%</td></tr>
-          <tr><td>45</td><td>55%</td></tr>
-        </tbody>
-      </table>
-      <p>
-        If you tell the model you've had a previous pregnancy (regardless of whether it resulted in a live birth or miscarriage), it won't assign you premature sterility at an age when you were demonstrably fertile. IVF can bypass most causes of natural sterility.
-      </p>
-
-      <!-- 10. IVF -->
-      <h3>10. IVF Success Rates (Fresh Cycles)</h3>
-      <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a> &mdash; fresh blastocyst + cleavage (non-PGT-A), pooled by transfer count</p>
+      <!-- 9. IVF -->
+      <h3>9. Fresh IVF Success Rates</h3>
+      <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a></p>
       <table>
         <thead>
           <tr><th>Age</th><th>Chance of live birth per IVF cycle</th></tr>
@@ -562,43 +533,35 @@
         Each IVF cycle takes about 4 months. This accounts for ovarian stimulation, egg retrieval, embryo culture, transfer, and the recommended rest period between cycles. By default, the model allows up to 3 fresh IVF cycles per child. The counter resets after each live birth.
       </p>
 
-      <!-- 11. Frozen Eggs -->
-      <h3>11. Frozen Eggs</h3>
+      <!-- 10. Frozen Eggs -->
+      <h3>10. IVF with Frozen Eggs</h3>
       <p class="source-tag"><a href="https://doi.org/10.1093/humupd/dmae009">Hirsch et al., 2024</a>; <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath et al., 2025</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
       <p>
-        About 78.5% of frozen eggs survive the thawing process (<a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a>). The chance of a live birth from each surviving egg depends on how old you were when they were frozen (<a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>):
+        About 78.5% of frozen eggs survive the thawing process. The chance of a live birth from each surviving egg depends on how old you were when they were frozen:
       </p>
       <table>
         <thead>
-          <tr><th>Age when eggs were frozen</th><th>Live birth rate per egg</th><th>Source</th></tr>
+          <tr><th>Age when eggs were frozen</th><th>Live birth rate per egg</th></tr>
         </thead>
         <tbody>
-          <tr><td>&lt; 35</td><td>13%</td><td>Namath 2025</td></tr>
-          <tr><td>35&ndash;37</td><td>9%</td><td>Interpolated</td></tr>
-          <tr><td>38&ndash;40</td><td>6%</td><td>Interpolated</td></tr>
-          <tr><td>&gt; 40</td><td>4%</td><td>Namath 2025</td></tr>
+          <tr><td>&lt; 35</td><td>13%</td></tr>
+          <tr><td>35&ndash;37</td><td>9%</td></tr>
+          <tr><td>38&ndash;40</td><td>6%</td></tr>
+          <tr><td>&gt; 40</td><td>4%</td></tr>
         </tbody>
       </table>
       <p>
-        Namath 2025 directly reports per-oocyte live birth rates for the &lt;&nbsp;35 and &gt;&nbsp;40 brackets. The 35&ndash;37 and 38&ndash;40 values are linearly interpolated between these two data points, as the study does not report per-oocyte rates for the intermediate range.
-      </p>
-      <p>
-        The key benefit: eggs frozen at 30 retain the quality of a 30-year-old's eggs, even if used at 40 (<a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett 2024</a>). Up to 9 eggs are thawed per cycle.
+        Eggs frozen at 30 retain the quality of a 30-year-old's eggs, even if used at 40. Up to 9 eggs are thawed per cycle.
       </p>
 
-      <!-- 12. Frozen Embryos -->
-      <h3>12. Frozen Embryos</h3>
+      <!-- 11. Frozen Embryos -->
+      <h3>11. IVF with Frozen Embryos</h3>
       <p class="source-tag"><a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>; <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett et al., 2024</a></p>
       <p>
-        Frozen embryos have the highest success rates of any assisted reproduction method because they've already cleared the egg-to-embryo hurdle. Success depends on the woman's age when the embryos were created (age at retrieval), not her age at transfer. <a href="https://doi.org/10.1007/s10815-024-03149-y">Barrett 2024</a> controlled for retrieval age and found no transfer-age effect on live birth rates.
+        IVF with frozen embryos are generally more effective than using frozen eggs. Success depends on the woman's age when the embryos were created, not her age at transfer.
       </p>
       <p>
-        Both columns below use <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 data</a> stratified by age of woman at retrieval. Untested rates pool blastocyst + cleavage (non-PGT-A) transfers. PGT-A rates use single embryo transfers only (n=96,855 across all age groups).
-      </p>
-
-      <h4>PGT-A Tested (Euploid) Embryos</h4>
-      <p>
-        Embryos that have been screened with preimplantation genetic testing for aneuploidy (PGT-A) and confirmed euploid have higher success rates, because the main age-dependent cause of failure &mdash; chromosomal abnormalities &mdash; has been removed. The PGT-A curve is notably flat: even at age &gt;&nbsp;42, euploid embryos achieve a 46.3% live birth rate per transfer.
+        Embryos that have been genetically screened (PGT-A) and confirmed chromosomally normal have much higher success rates, because the main age-dependent cause of failure &mdash; chromosomal abnormalities &mdash; has been removed. The genetically screened curve is notably flat across all ages:
       </p>
       <div style="position: relative; margin: 1.5rem 0;">
         <canvas id="frozenEmbryoChart"></canvas>
@@ -616,11 +579,11 @@
               {
                 label: 'Untested',
                 data: untested,
-                borderColor: 'rgb(130, 80, 170)',
-                backgroundColor: 'rgba(130, 80, 170, 0.08)',
+                borderColor: 'rgb(212, 165, 116)',
+                backgroundColor: 'rgba(212, 165, 116, 0.08)',
                 borderWidth: 2.5,
                 pointRadius: 5,
-                pointBackgroundColor: 'rgb(130, 80, 170)',
+                pointBackgroundColor: 'rgb(212, 165, 116)',
                 pointBorderColor: '#fafaf9',
                 pointBorderWidth: 2,
                 pointHoverRadius: 7,
@@ -628,13 +591,13 @@
                 tension: 0.3
               },
               {
-                label: 'PGT-A tested (euploid)',
+                label: 'Genetically screened',
                 data: pgtA,
-                borderColor: 'rgb(55, 130, 110)',
-                backgroundColor: 'rgba(55, 130, 110, 0.08)',
+                borderColor: 'rgb(124, 111, 138)',
+                backgroundColor: 'rgba(124, 111, 138, 0.08)',
                 borderWidth: 2.5,
                 pointRadius: 5,
-                pointBackgroundColor: 'rgb(55, 130, 110)',
+                pointBackgroundColor: 'rgb(124, 111, 138)',
                 pointBorderColor: '#fafaf9',
                 pointBorderWidth: 2,
                 pointHoverRadius: 7,
@@ -666,6 +629,7 @@
                 bodyFont: { size: 12 },
                 padding: { x: 12, y: 8 },
                 cornerRadius: 6,
+                itemSort: function(a, b) { return b.parsed.y - a.parsed.y; },
                 callbacks: {
                   title: function(items) { return 'Age at retrieval: ' + items[0].label; },
                   label: function(item) {
@@ -717,10 +681,7 @@
 
       <h3>Different age-decline curve</h3>
       <p>
-        A key difference between our model and Habbema's is how quickly natural conception rates decline with age. We reverse-engineered Habbema's fecundability decline curve by fitting a standalone simulation to their published completion rate data (114 data points across 19 starting ages &times; 6 scenarios). The best-fit curve shows a sharp drop from their average of 23% at age 30 to roughly 9% at age 31 (a ~60% decline in 1 year), followed by a gentle decline to ~5% by age 44.
-      </p>
-      <p>
-        Our model uses the <a href="https://doi.org/10.1016/j.ajog.2017.09.002">Wesselink 2017</a> age-fecundability curves, which decline more gradually through the 30s. Unlike Habbema, our model also shows a mild decline from ages 20&ndash;30, and uses separate curves for women who have and haven't been pregnant before:
+        A key difference is how quickly natural conception rates decline with age. We reverse-engineered Habbema's decline curve from their published data. Their curve holds steady at 23% until age 30 and then drops sharply to ~9% at age 31. Our model uses newer data that shows a more gradual decline through the 30s, and uses separate curves for women who have and haven't been pregnant before:
       </p>
       <div style="position: relative; margin: 1.5rem 0;">
         <canvas id="fecundDeclineComparisonChart"></canvas>
@@ -728,8 +689,8 @@
       <script>
       (function() {
         var ages = [20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45];
-        var oursNulligravid = [25.0,25.0,24.4,23.8,23.2,22.6,22.0,21.3,20.7,20.0,20.3,20.7,21.0,19.7,18.3,17.0,15.6,14.2,12.8,11.0,9.3,7.6,5.9,5.0,5.0,5.0];
-        var oursGravid = [25.0,25.0,24.6,24.2,23.8,23.4,23.0,23.2,23.5,23.8,23.2,22.6,22.0,22.7,23.3,24.0,21.8,19.7,17.5,16.3,15.1,13.8,12.6,12.0,12.0,12.0];
+        var oursNulligravid = [23.0,23.0,22.4,21.9,21.3,20.8,20.2,19.6,19.0,18.4,18.7,19.0,19.3,18.1,16.9,15.6,14.3,13.0,11.7,10.1,8.6,7.0,5.4,4.3,3.7,3.1];
+        var oursGravid = [23.0,23.0,22.6,22.3,21.9,21.5,21.2,21.4,21.6,21.8,21.3,20.8,20.2,20.9,21.5,22.1,20.1,18.1,16.1,15.0,13.9,12.7,11.6,10.3,8.8,7.4];
         var habbema = [23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,23.0,9.2,8.8,8.4,8.0,7.7,7.3,7.0,6.6,6.3,6.0,5.7,5.4,5.1,4.8,4.6];
         new Chart(document.getElementById('fecundDeclineComparisonChart'), {
           type: 'line',
@@ -739,36 +700,36 @@
               {
                 label: 'Our model (never pregnant)',
                 data: oursNulligravid,
-                borderColor: 'rgb(130, 80, 170)',
-                backgroundColor: 'rgba(130, 80, 170, 0.06)',
+                borderColor: 'rgb(212, 165, 116)',
+                backgroundColor: 'rgba(212, 165, 116, 0.06)',
                 borderWidth: 2.5,
                 pointRadius: 0,
                 pointHoverRadius: 5,
-                pointBackgroundColor: 'rgb(130, 80, 170)',
+                pointBackgroundColor: 'rgb(212, 165, 116)',
                 fill: false,
                 tension: 0.3
               },
               {
                 label: 'Our model (been pregnant)',
                 data: oursGravid,
-                borderColor: 'rgb(55, 130, 110)',
-                backgroundColor: 'rgba(55, 130, 110, 0.06)',
+                borderColor: 'rgb(124, 111, 138)',
+                backgroundColor: 'rgba(124, 111, 138, 0.06)',
                 borderWidth: 2.5,
                 pointRadius: 0,
                 pointHoverRadius: 5,
-                pointBackgroundColor: 'rgb(55, 130, 110)',
+                pointBackgroundColor: 'rgb(124, 111, 138)',
                 fill: false,
                 tension: 0.3
               },
               {
                 label: 'Habbema (reverse-engineered)',
                 data: habbema,
-                borderColor: 'rgb(180, 100, 60)',
+                borderColor: 'rgb(107, 158, 138)',
                 borderWidth: 2.5,
                 borderDash: [6, 3],
                 pointRadius: 0,
                 pointHoverRadius: 5,
-                pointBackgroundColor: 'rgb(180, 100, 60)',
+                pointBackgroundColor: 'rgb(107, 158, 138)',
                 fill: false,
                 tension: 0.1
               }
@@ -797,6 +758,7 @@
                 bodyFont: { size: 12 },
                 padding: { x: 12, y: 8 },
                 cornerRadius: 6,
+                itemSort: function(a, b) { return b.parsed.y - a.parsed.y; },
                 callbacks: {
                   title: function(items) { return 'Age ' + items[0].label; },
                   label: function(item) {
@@ -812,7 +774,7 @@
                 grid: { color: 'rgba(231, 229, 228, 0.6)' }
               },
               y: {
-                min: 0, max: 28,
+                min: 0, max: 26,
                 title: { display: true, text: 'Per-cycle conception rate', font: { size: 12, weight: '500' }, color: '#57534e' },
                 ticks: { stepSize: 5, callback: function(v) { return v + '%'; }, color: '#78716c', font: { size: 11 } },
                 grid: { color: 'rgba(231, 229, 228, 0.6)' }
@@ -823,39 +785,33 @@
       })();
       </script>
       <p>
-        The curves converge by the early 40s but differ substantially in the early-to-mid 30s, where our model retains much higher per-cycle rates. Habbema's curve averages 23% from ages 20&ndash;30 and then drops sharply, while our model starts at 25% for the 18&ndash;24 reference group and shows a mild, gradual decline through the late 20s and 30s based on Wesselink&rsquo;s fecundability ratios.
+        The curves converge by the early 40s but differ substantially in the early-to-mid 30s, where our model retains much higher per-cycle rates.
       </p>
       <p>
-        This is partially offset by a difference in how fecundability varies between couples: Habbema uses a truncated Normal distribution with a coefficient of variation (CV) of 0.52, while our model uses a Beta distribution with a CV of 0.75 &mdash; meaning we model 44% more between-couple spread. The extra heterogeneity in our model creates more very-low-fertility couples (~13% below 5% per cycle, vs. ~4% in Habbema's), which pulls down completion rates at high confidence levels despite the higher mean fecundability.
+        This is partially offset by how we model variation between couples. Our model assigns a wider spread of individual fertility rates than Habbema's &mdash; creating more very-low-fertility couples (~16% below 5% per cycle, vs. ~4% in Habbema's). This pulls down completion rates at high confidence levels. We calibrated this spread against all 18 of Habbema's benchmark scenarios and match their results within about 1 year on average.
       </p>
       <p>
-        The concentration parameter in our Beta distribution (4.33) was calibrated against all 18 Habbema benchmark scenarios (1&ndash;3 children &times; 50/75/90% thresholds &times; with/without IVF), achieving a mean absolute error of 0.92 years and a maximum error of 2.9 years.
-      </p>
-      <p>
-        Finally, if you report a prior pregnancy, our model uses the more favorable &ldquo;been pregnant before&rdquo; curve for the entire run. This is not incorporated in Habbema's model.
+        Additionally, if you report a prior pregnancy, our model uses the more favorable &ldquo;been pregnant before&rdquo; curve. Habbema's model does not make this distinction.
       </p>
 
       <h3>Newer miscarriage data</h3>
       <p>
-        Habbema used miscarriage rates from a study in 2004. We use <a href="https://doi.org/10.1136/bmj.l869">Magnus et al. 2019</a>, which has more precise age-specific rates. We also incorporate recurrent miscarriage risk (each consecutive loss increases the odds of the next one) and the effect of <a href="https://doi.org/10.1093/humupd/dmaa010">male partner age</a> on miscarriage, which Habbema did not model.
-      </p>
-      <p>
-        Our miscarriage rates are notably more pessimistic than Habbema's at older ages. Habbema's paper assumed ~25% at age 40 and ~35% at age 45, while Magnus 2019 reports 32.2% at 40&ndash;44 and 53.6% at 45+.
+        Habbema used miscarriage rates from 2004. We use newer data (see Section 3) with more precise age-specific rates, along with adjustments for recurrent miscarriage and male partner age &mdash; neither of which Habbema modeled. Our miscarriage rates are more pessimistic at older ages: we use 32.2% at 40&ndash;44 and 53.6% at 45+, compared to Habbema's ~25% and ~35%.
       </p>
 
       <h3>Newer IVF data</h3>
       <p>
-        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women, due to advances in embryo culture, vitrification, and lab protocols. Our model uses current per-transfer live birth rates from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>.
+        Habbema's IVF success rates came from data available before 2015. IVF outcomes have improved meaningfully since then, particularly for older women. Our model uses SART 2023 data (see Section 9).
       </p>
 
-      <h3>Frozen eggs, frozen embryos, and PGT-A</h3>
+      <h3>Frozen eggs, frozen embryos, and genetic screening</h3>
       <p>
-        Habbema's model included fresh IVF as the only assisted reproduction option. Ours adds frozen egg batches (with age-at-freeze-dependent per-oocyte rates from <a href="https://doi.org/10.1093/humupd/dmae009">Hirsch 2024</a> and <a href="https://doi.org/10.1016/j.fertnstert.2025.04.023">Namath 2025</a>), frozen embryo batches, and PGT-A tested embryos. All frozen embryo and PGT-A transfer rates come from the <a href="https://www.sartcorsonline.com/EmbryoOutcome/PublicSARTOutcomeTables">SART 2023 Outcome Tables</a>, stratified by age at retrieval. Users can enter their actual frozen inventory and the model will use it before falling back to fresh IVF.
+        Habbema's model only included fresh IVF. Ours adds frozen eggs, frozen embryos, and genetically screened embryos (see Sections 10&ndash;11). You can enter your actual frozen inventory and the model will use it before falling back to fresh IVF.
       </p>
 
       <h3>BMI and smoking adjustments</h3>
       <p>
-        Habbema's model did not account for BMI or smoking. Ours adjusts natural conception odds based on BMI (<a href="https://doi.org/10.1016/j.fertnstert.2016.04.011">McKinnon 2016</a>) and smoking status (<a href="https://doi.org/10.1093/humrep/dey372">Wesselink 2019</a>), and applies a separate BMI penalty to IVF success rates (<a href="https://doi.org/10.1093/humupd/dmz011">Sermondade 2019</a>). The effects are modest below BMI 35 and for former smokers, but substantial at higher BMI or for regular smokers.
+        Habbema's model did not account for BMI or smoking. Ours adjusts natural conception odds for both (see Sections 5&ndash;7). The effects are modest below BMI 35 and for former smokers, but substantial at higher BMI or for regular smokers.
       </p>
 
       <h3>User-configurable parameters</h3>
@@ -892,13 +848,21 @@
         The data comes primarily from North American and Northern European populations. Results may not apply equally across all backgrounds. Additionally, the model doesn't take into consideration:
       </p>
       <ul>
-        <li>Multiple births (twins, triplets, etc.) which will affect family completion rates. This is rare enough that it's not worth modeling.</li>
+        <li>Multiple births (twins, triplets, etc.) which will affect family completion rates. This is rare enough that it's not worth modeling since it's unlikely to affect the model's results.</li>
         <li>Fertility drugs like clomid, letrozole, metformin, etc. which may improve your individual fertility outcomes.</li>
         <li>Intraurine Insemination (IUI) which is less effective than IVF but significantly cheaper and less invasive. Many couples may choose IUI before IVF, but there isn't a lot of data on how effective IUI is, especially as it relates to age-related decline.</li>
+        <li>Our model simplifies how IVF works. Each IVF cycle is modeled as taking 4 months and assumes that you will go through the full IVF lifecycle (egg retrieval, fertilization, embryo transfer, and pregnancy test) before the next cycle. However, there are quite a few reasons why a real-life IVF experience would differ from what we model:
+          <ul>
+            <li>We assume you are able to transfer one embryo per 4-month cycle. This is not always the case, and it may take multiple egg retrieval cycles before you have viable embryos to transfer.</li>
+            <li>Your clinic may even proactively recommend multiple egg retrieval / fertilization cycles before an embryo transfer, especially if you want multiple children. This strategy would allow you to freeze embryos created at a younger age so that you can transfer them at an older age for all of your future children and have a higher chance of completing your desired family size. If you already have banked eggs or embryos, you can input them in the model. But we don't model out this strategy preemptively.</li>
+            <li>All IVF cycles are assumed to cost 4 months, but IVF with banked eggs or embryos should be faster.</li>
+            <li>For fresh IVF, you can also run genetic testing against fresh embryos to further increase your transfer success rates per embryo. Our model only supports this for banked frozen embryos you already have.</li>
+          </ul>
+        </li>
       </ul>
       <h3>About the creator</h3>
       <p>
-        Fertility Forecaster was built by a software engineer, not a fertility researcher or statistician. I have no professional background in reproductive medicine or statistics beyond two college-level statistics courses taken as part of a computer science degree, plus eight years of professional software engineering experience. Mostly, I'm a mom who wished this type of information had been available when I was in my 20s and trying to figure out whether to freeze my eggs, when to start trying, and how to think about the tradeoffs.
+        Fertility Forecaster was built by a software engineer, not a fertility researcher or statistician. I have no professional background in reproductive medicine or statistics beyond two college-level statistics courses taken as part of a computer science degree. Mostly, I'm a mom who wished this type of information had been available when I was in my 20s and trying to figure out whether to freeze my eggs, when to start trying, and how to think about the tradeoffs.
       </p>
       <p>
         This model has not been peer reviewed. The source code and methodology are available open source at <a href="https://github.com/joyceyan/fertility-forecaster">github.com/joyceyan/fertility-forecaster</a> so that others can inspect, critique, and improve it.

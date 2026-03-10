@@ -45,11 +45,17 @@ def find_cutoff(desired_children: int, threshold: float, ivf: bool) -> tuple[flo
     last_passing_rate = 0.0
     for age_10x in range(180, 451):
         age = age_10x / 10.0
+        habbema_cycles_before_ivf = 12
+        if age <= 33:
+            habbema_cycles_before_ivf = 36
+        elif age <= 38:
+            habbema_cycles_before_ivf = 24
         result = run_simulation(
             SimulationParams(
                 female_age=age,
                 desired_children=desired_children,
                 ivf_willingness="yes" if ivf else "no",
+                cycles_before_ivf=habbema_cycles_before_ivf,
             )
         )
         if result.completion_rate >= threshold:

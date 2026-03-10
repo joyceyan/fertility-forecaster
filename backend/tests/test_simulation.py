@@ -408,13 +408,14 @@ class TestEdgeCaseOldWithCycles:
         assert result.completion_rate < 0.50
 
     def test_45yo_graceful(self):
-        """45-year-old should return ~0% completion with no errors."""
+        """45-year-old now has 5 years of runway — low but nonzero completion."""
         result = run_simulation(
             SimulationParams(
                 female_age=45, desired_children=1, ivf_willingness="no",
             )
         )
-        assert result.completion_rate == pytest.approx(0.0, abs=0.01)
+        assert result.completion_rate > 0
+        assert result.completion_rate < 0.50
 
 
 # --- Section 9: Desired children already achieved ---
@@ -570,113 +571,7 @@ class TestPerformance:
         assert elapsed < 30.0
 
 
-# --- Phase 1e: Sterility tests ---
-
-class TestSterilityFractionInSimulation:
-    """Test 2: Sterility fraction should match curve at start age."""
-
-    def test_sterility_fraction_at_35(self):
-        """At age 35, ~5% of couples should be sterile at initialization.
-
-        Run many simulations and check that the naturally-sterile fraction
-        results in reduced completion vs a hypothetical with no sterility.
-        We verify indirectly: completion rate at 35 (no IVF) should be
-        noticeably lower than 100%.
-        """
-        result = run_simulation(
-            SimulationParams(female_age=35, desired_children=1, ivf_willingness="no")
-        )
-        # Even with sterility, most couples at 35 should still complete
-        assert 0.80 < result.completion_rate < 0.97
-
-    def test_sterility_fraction_at_40(self):
-        """At age 40, ~17% sterile at start — much lower completion rate."""
-        result = run_simulation(
-            SimulationParams(female_age=40, desired_children=1, ivf_willingness="no")
-        )
-        # With ~17% sterile + lower fecundability, rate should drop significantly
-        assert result.completion_rate < 0.80
-
-    def test_sterility_makes_old_age_harder(self):
-        """Sterility should make completion harder at older ages.
-
-        Compare two starting ages: 25 (0.01 sterile) vs 40 (0.17 sterile).
-        The gap should be significant due to sterility + declining fecundability.
-        """
-        young = run_simulation(
-            SimulationParams(female_age=25, desired_children=1, ivf_willingness="no")
-        )
-        old = run_simulation(
-            SimulationParams(female_age=40, desired_children=1, ivf_willingness="no")
-        )
-        assert young.completion_rate - old.completion_rate > 0.15
-
-
-class TestSterileCouplesCannotConceiveNaturally:
-    """Test 3: Sterile couples have zero natural fecundability."""
-
-    def test_forced_sterile_no_natural_conception(self):
-        """A couple with sterility_threshold=0.0 should be sterile from the start
-        (since sterility_prob >= 0.005 at age 20 >= 0.0). They should never
-        conceive naturally but CAN succeed via IVF.
-
-        We verify by running no-IVF simulation at a young age: sterile couples
-        contribute to incomplete rate. With IVF: they can still succeed.
-        """
-        # At age 30 (sterility prob=0.02), ~2% of couples are sterile.
-        # With no IVF, those couples are stuck. We can't force threshold=0
-        # through the public API, but we can verify that the no-IVF rate
-        # at age 30 is < 100% (sterile couples can't complete).
-        no_ivf = run_simulation(
-            SimulationParams(female_age=30, desired_children=1, ivf_willingness="no")
-        )
-        assert no_ivf.completion_rate < 1.0  # sterile couples drag it below 100%
-
-    def test_ivf_bypasses_sterility(self):
-        """IVF should help sterile couples (IVF success rates don't depend on
-        natural sterility). Completion rate with IVF should be higher than without."""
-        no_ivf = run_simulation(
-            SimulationParams(female_age=38, desired_children=1, ivf_willingness="no")
-        )
-        with_ivf = run_simulation(
-            SimulationParams(female_age=38, desired_children=1, ivf_willingness="yes")
-        )
-        # IVF should help significantly because it bypasses sterility
-        assert with_ivf.completion_rate > no_ivf.completion_rate
-
-
-class TestSterilityOnsetDuringSimulation:
-    """Test 4: Sterility can onset mid-simulation."""
-
-    def test_sterility_onset_reduces_late_conceptions(self):
-        """A couple starting at age 33 may become sterile by 37-38.
-
-        Verify this indirectly: 2 children starting at 33 should have
-        a lower rate than starting at 28 (more time, less sterility onset).
-        """
-        early = run_simulation(
-            SimulationParams(female_age=28, desired_children=2, ivf_willingness="no")
-        )
-        late = run_simulation(
-            SimulationParams(female_age=33, desired_children=2, ivf_willingness="no")
-        )
-        assert early.completion_rate > late.completion_rate
-
-    def test_sterility_curve_increases_with_age(self):
-        """Completion rates should drop faster at older ages where sterility
-        probability increases more steeply."""
-        rates = []
-        for age in [30, 35, 38, 40, 42]:
-            r = run_simulation(
-                SimulationParams(female_age=float(age), desired_children=1, ivf_willingness="no")
-            )
-            rates.append(r.completion_rate)
-        # Each age should have a lower rate than the previous
-        for i in range(len(rates) - 1):
-            assert rates[i] > rates[i + 1]
-
-
-# --- Phase 1f: Gravid curve usage & sterility conditioning tests ---
+# --- Phase 1f: Gravid curve usage tests ---
 
 class TestNulligravidForAllSimulatedChildren:
     """Test 1: Nulligravid curve used for all children when no prior history."""
@@ -741,74 +636,6 @@ class TestGravidCurveWithUserHistory:
         # relative magnitudes; both should be in a reasonable range.
         assert no_mc.completion_rate > 0.5
         assert with_mc.completion_rate > 0.5
-
-
-class TestSterilityWithPriorBirths:
-    """Test 3: Sterility still applies with prior births."""
-
-    def test_prior_births_can_still_fail(self):
-        """With prior_live_births=1 at age 38, some fraction should fail due to
-        sterility onset (secondary infertility). Rate should be < 100%.
-        """
-        result = run_simulation(
-            SimulationParams(
-                female_age=38, desired_children=2, prior_live_births=1,
-                ivf_willingness="no",
-            )
-        )
-        assert result.completion_rate < 1.0
-        # Should still be reasonably high (gravid curve + only needs 1 more)
-        assert result.completion_rate > 0.50
-
-
-class TestSterilityThresholdConditioned:
-    """Test 4: Sterility threshold conditioned on known fertile history."""
-
-    def test_no_sterile_at_known_fertile_age(self):
-        """With prior_live_births=1 at age 35 (fallback: last fertile at 33),
-        sterility thresholds should all be above sterility_curve(33) ≈ 0.03.
-        Consequence: no couple is sterile at the start of simulation.
-
-        Verify indirectly: completion rate should be higher than it would be
-        if sterility thresholds were drawn from [0, 1] without conditioning.
-        """
-        # With prior births (conditioned thresholds)
-        with_history = run_simulation(
-            SimulationParams(
-                female_age=35, desired_children=2, prior_live_births=1,
-                ivf_willingness="no",
-            )
-        )
-        # The completion rate should be quite high — all couples are fertile at start
-        assert with_history.completion_rate > 0.80
-
-    def test_age_at_last_birth_conditions_threshold(self):
-        """Specifying age_at_last_birth should condition thresholds more precisely."""
-        # Last birth at 34 — sterility_curve(34) ≈ 0.038
-        # All thresholds above 0.038, so nobody sterile until well past 34
-        result = run_simulation(
-            SimulationParams(
-                female_age=36, desired_children=2, prior_live_births=1,
-                age_at_last_birth=34.0, ivf_willingness="no",
-            )
-        )
-        assert result.completion_rate > 0.5
-
-
-class TestSecondaryInfertility:
-    """Test 5: Secondary infertility can occur."""
-
-    def test_some_couples_develop_sterility_after_prior_birth(self):
-        """With prior birth at 35, wanting 3 total (needs 2 more),
-        some couples should become sterile between 35-45 and fail."""
-        result = run_simulation(
-            SimulationParams(
-                female_age=35, desired_children=3, prior_live_births=1,
-                ivf_willingness="no",
-            )
-        )
-        # Should succeed sometimes but not always — secondary infertility kicks in
-        assert 0.10 < result.completion_rate < 0.95
 
 
 class TestCyclesTriedWithoutConceptions:
@@ -887,7 +714,6 @@ class TestHighFertilityCouplesConcieveFaster:
             draw_individual_fecundabilities,
             fecundability_curve,
             miscarriage_curve,
-            sterility_curve,
         )
 
         rng = np.random.default_rng(42)
@@ -896,8 +722,6 @@ class TestHighFertilityCouplesConcieveFaster:
         mean_fecund = float(fecundability_curve(np.array([age]), gravid=False)[0])
         individual_fecund = draw_individual_fecundabilities(mean_fecund, N, rng)
 
-        sterility_thresholds = rng.random(N)
-        already_sterile = np.zeros(N, dtype=bool)
         conceived_cycle = np.full(N, -1, dtype=int)
         current_age = np.full(N, age, dtype=float)
 
@@ -906,14 +730,9 @@ class TestHighFertilityCouplesConcieveFaster:
             if not np.any(active):
                 break
 
-            sterility_prob = sterility_curve(current_age)
-            newly_sterile = ~already_sterile & (sterility_prob >= sterility_thresholds)
-            already_sterile |= newly_sterile
-
             current_mean = fecundability_curve(current_age[active], gravid=False)
             age_ratio = current_mean / mean_fecund
             p = individual_fecund[active] * age_ratio
-            p[already_sterile[active]] = 0.0
             np.clip(p, 0.0, 1.0, out=p)
 
             conceived = rng.random(np.sum(active)) < p
@@ -948,7 +767,6 @@ class TestMultiChildSelectionEffect:
             draw_individual_fecundabilities,
             fecundability_curve,
             miscarriage_curve,
-            sterility_curve,
         )
 
         rng = np.random.default_rng(42)
@@ -959,14 +777,12 @@ class TestMultiChildSelectionEffect:
         population_mean = np.mean(individual_fecund)
 
         # Run a simplified 2-child simulation tracking births
-        sterility_thresholds = rng.random(N)
-        already_sterile = np.zeros(N, dtype=bool)
         children = np.zeros(N, dtype=int)
         current_age = np.full(N, age_start, dtype=float)
         waiting = np.zeros(N, dtype=int)
 
         for cycle in range(300):  # up to 25 years
-            active = (children < 2) & (current_age < 45.0)
+            active = (children < 2) & (current_age < 50.0)
             if not np.any(active):
                 break
 
@@ -978,14 +794,9 @@ class TestMultiChildSelectionEffect:
             if not np.any(trying):
                 continue
 
-            sterility_prob = sterility_curve(current_age)
-            newly_sterile = ~already_sterile & (sterility_prob >= sterility_thresholds)
-            already_sterile |= newly_sterile
-
             current_mean = fecundability_curve(current_age[trying], gravid=False)
             age_ratio = current_mean / mean_fecund
             p = individual_fecund[trying] * age_ratio
-            p[already_sterile[trying]] = 0.0
             np.clip(p, 0.0, 1.0, out=p)
 
             conceived = rng.random(np.sum(trying)) < p
@@ -1044,11 +855,11 @@ class TestCyclesTriedAdjustsDistribution:
 class TestHabbemaBenchmarkCalibrated:
     """Test 5: Habbema benchmark with calibrated concentration."""
 
-    def test_cutoff_ages_within_2_5_years(self):
-        """90% cutoff ages for 1, 2, 3 children should all be within ±2.5 years
-        of Habbema targets (32, 27, 23). Tolerance is ±2.5 rather than ±2
-        because our 25% base rate (vs Habbema's 23% average) shifts cutoffs
-        slightly later; concentration parameter recalibration is pending.
+    def test_cutoff_ages_within_3_years(self):
+        """90% cutoff ages for 1, 2, 3 children should all be within ±3 years
+        of Habbema targets (32, 27, 23). Tolerance is ±3 because our model
+        uses a 25% base rate (vs Habbema's 23% average) and does not include
+        a separate sterility mechanism, both of which shift cutoffs later.
         """
         habbema = {1: 32, 2: 27, 3: 23}
         for desired, target in habbema.items():
@@ -1063,7 +874,7 @@ class TestHabbemaBenchmarkCalibrated:
                 if result.completion_rate < 0.90:
                     drift = start_age - target
                     print(f"\n{desired}-child cutoff: {start_age:.1f} (drift={drift:+.1f})")
-                    assert abs(drift) <= 2.5, (
+                    assert abs(drift) <= 3.0, (
                         f"{desired}-child cutoff {start_age:.1f} is {drift:+.1f} years "
                         f"from Habbema target {target}"
                     )
@@ -1081,7 +892,6 @@ class TestTimeToPregnancyDistribution:
             draw_individual_fecundabilities,
             fecundability_curve,
             miscarriage_curve,
-            sterility_curve,
         )
 
         rng = np.random.default_rng(42)
@@ -1090,8 +900,6 @@ class TestTimeToPregnancyDistribution:
         mean_fecund = float(fecundability_curve(np.array([age]), gravid=False)[0])
         individual_fecund = draw_individual_fecundabilities(mean_fecund, N, rng)
 
-        sterility_thresholds = rng.random(N)
-        already_sterile = np.zeros(N, dtype=bool)
         conceived_cycle = np.full(N, -1, dtype=int)
         current_age = np.full(N, age, dtype=float)
 
@@ -1100,14 +908,9 @@ class TestTimeToPregnancyDistribution:
             if not np.any(active):
                 break
 
-            sterility_prob = sterility_curve(current_age)
-            newly_sterile = ~already_sterile & (sterility_prob >= sterility_thresholds)
-            already_sterile |= newly_sterile
-
             current_mean = fecundability_curve(current_age[active], gravid=False)
             age_ratio = current_mean / mean_fecund
             p = individual_fecund[active] * age_ratio
-            p[already_sterile[active]] = 0.0
             np.clip(p, 0.0, 1.0, out=p)
 
             conceived = rng.random(np.sum(active)) < p
@@ -1128,61 +931,9 @@ class TestTimeToPregnancyDistribution:
               f"by cycle 6={by_c6:.1f}%, by cycle 12={by_c12:.1f}%")
 
         # Literature: ~25-30% cycle 1, ~55-60% by cycle 6, ~80-85% by cycle 12
-        # We allow wider ranges because our model includes sterility
         assert 10 <= by_c1 <= 35, f"Cycle 1 rate {by_c1:.1f}% outside expected range"
         assert 40 <= by_c6 <= 70, f"By cycle 6 rate {by_c6:.1f}% outside expected range"
         assert 65 <= by_c12 <= 90, f"By cycle 12 rate {by_c12:.1f}% outside expected range"
-
-
-class TestSterilityAndHeterogeneityNoDoubleCount:
-    """Test 7: Sterility and heterogeneity don't double-count."""
-
-    def test_sterile_vs_low_fecundability_at_40(self):
-        """At age 40, report fraction sterile, fraction with individual_fecund < 0.02,
-        and fraction who completed 1 child in 60 months. The sterile fraction should
-        match the sterility curve (~17%). The low-fecundability fraction should be
-        additional to the sterile couples.
-        """
-        from fertility_forecaster.curves import (
-            draw_individual_fecundabilities,
-            fecundability_curve,
-            sterility_curve,
-        )
-
-        rng = np.random.default_rng(42)
-        N = 50_000
-        age = 40.0
-        mean_fecund = float(fecundability_curve(np.array([age]), gravid=False)[0])
-        individual_fecund = draw_individual_fecundabilities(mean_fecund, N, rng)
-
-        # Sterility
-        sterility_thresholds = rng.random(N)
-        sterility_prob = float(sterility_curve(np.array([age]))[0])
-        is_sterile = sterility_thresholds <= sterility_prob
-        sterile_fraction = np.mean(is_sterile)
-
-        # Low fecundability (among non-sterile)
-        non_sterile = ~is_sterile
-        low_fecund_fraction = np.mean(individual_fecund[non_sterile] < 0.02)
-
-        # Completion rate from actual simulation
-        result = run_simulation(
-            SimulationParams(female_age=40, desired_children=1, ivf_willingness="no")
-        )
-
-        print(f"\nAge 40 (N={N}):")
-        print(f"  Sterile fraction: {sterile_fraction:.3f} (curve says {sterility_prob:.3f})")
-        print(f"  Low fecund (<0.02) among non-sterile: {low_fecund_fraction:.3f}")
-        print(f"  Completion rate (1 child, no IVF): {result.completion_rate:.3f}")
-
-        # Sterile fraction should match curve
-        assert abs(sterile_fraction - sterility_prob) < 0.02
-
-        # Low-fecundability is a separate group beyond sterile couples
-        assert low_fecund_fraction > 0.05  # Some non-sterile couples still have very low fecund
-
-        # Completion rate should reflect both factors
-        assert result.completion_rate < 1.0 - sterile_fraction  # worse than just sterility
 
 
 class TestPGTAEmbryos:

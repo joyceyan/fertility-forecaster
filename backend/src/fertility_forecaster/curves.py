@@ -8,18 +8,17 @@ from .models import SmokingStatus
 
 # Wesselink et al. 2017 Table 3 fecundity ratios at age bracket midpoints.
 # 18-20 assumed equal to the 21-24 reference group (FR = 1.00).
-_FECUNDABILITY_AGES = np.array([21, 26, 29, 32, 35, 38, 42.5], dtype=float)
-_FECUNDABILITY_FR_NULLIGRAVID = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20], dtype=float)
-_FECUNDABILITY_FR_GRAVID = np.array([1.00, 0.92, 0.95, 0.88, 0.96, 0.70, 0.48], dtype=float)
-# Base fecundability for the 18-24 reference group: 25% per cycle.
-# The American Society for Reproductive Medicine (ASRM) cites 25-30% per cycle
-# for women in their 20s-early 30s. The PRESTO cohort (Wesselink 2017) uses
-# ages 21-24 as the reference group with the highest fecundability ratio (1.00),
-# consistent with ~25% as the peak rate before age-related decline begins.
-# Habbema et al. 2015 uses 23%, which represents an average across ages 20-30
-# rather than a peak rate; since our model applies Wesselink age-ratio decline
-# starting from the reference group, 25% is the appropriate anchor.
-_BASE_FECUNDABILITY = 0.25
+_FECUNDABILITY_AGES = np.array([21, 26, 29, 32, 35, 38, 42.5, 50], dtype=float)
+_FECUNDABILITY_FR_NULLIGRAVID = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20, 0.0], dtype=float)
+_FECUNDABILITY_FR_GRAVID = np.array([1.00, 0.92, 0.95, 0.88, 0.96, 0.70, 0.48, 0.0], dtype=float)
+# Base fecundability for the 18-24 reference group: 23% per cycle.
+# Habbema et al. 2015 uses 23% as the population average across ages 20-30.
+# The ASRM cites 25-30% as the peak for women in their early 20s.
+# We use 23% because the Wesselink PRESTO cohort (from which we derive
+# age-decline ratios) includes unknowingly subfertile/sterile women,
+# so the observed FRs already partially reflect population-level sterility.
+# Using 23% anchors the model to the same population-average level as Habbema.
+_BASE_FECUNDABILITY = 0.23
 # The gravid/nulligravid divergence at older ages is real, not an artifact.
 # Steiner & Jukic 2016 (DOI: 10.1016/j.fertnstert.2016.02.028) independently
 # corroborates this: women who have never conceived by their late 30s likely
@@ -41,18 +40,13 @@ OOCYTE_SURVIVAL_RATE = 0.785  # Hirsch et al. 2024
 # adds a 3-month recovery delay before the next cycle.
 ART_MISCARRIAGE_RATE = 0.15
 
-# Age-dependent cumulative probability of permanent sterility
-# From Habbema et al. 2015 / Leridon model
-_STERILITY_AGES = np.array([20, 25, 30, 35, 38, 40, 42, 45], dtype=float)
-_STERILITY_RATES = np.array([0.005, 0.01, 0.02, 0.05, 0.10, 0.17, 0.30, 0.55], dtype=float)
-
 # Concentration parameter for individual fecundability draws.
 # Controls how much fecundability varies between couples.
 # Lower = more heterogeneity, higher = more homogeneous.
-# CV = 0.75 → concentration = 3/(0.75²) - 1 = 4.33.
+# With mean=0.23: CV = sqrt(0.77 / (0.23 * 5.23)) = 0.80.
 # Calibrated against Habbema et al. 2015 benchmarks (all 18 scenarios).
-# MAE = 0.92 years, max error = 2.9 years, RMSE = 1.21.
-FECUNDABILITY_CONCENTRATION = 4.33
+# MAE = 0.49 years, max error = 1.4 years, RMSE = 0.62.
+FECUNDABILITY_CONCENTRATION = 4.23
 
 # Recurrent miscarriage odds ratios
 _RECURRENT_MC_OR = {0: 1.0, 1: 1.54, 2: 2.21}  # 3+ → 3.97
@@ -93,16 +87,6 @@ def fecundability_curve(ages: np.ndarray, gravid: bool | np.ndarray = False) -> 
     nulligravid_rates = nulligravid_fr * _BASE_FECUNDABILITY
     gravid_rates = gravid_fr * _BASE_FECUNDABILITY
     return np.where(gravid, gravid_rates, nulligravid_rates)
-
-
-def sterility_curve(ages: np.ndarray) -> np.ndarray:
-    """Cumulative probability of permanent sterility by female age.
-
-    From Habbema et al. 2015 / Leridon model. Represents irreversible inability
-    to conceive naturally (e.g. premature ovarian failure, complete tubal occlusion).
-    IVF bypasses most causes of natural sterility.
-    """
-    return np.interp(ages, _STERILITY_AGES, _STERILITY_RATES)
 
 
 def miscarriage_curve(ages: np.ndarray) -> np.ndarray:

@@ -3,9 +3,9 @@
 Tests CVs from 0.50 to 0.80, computing the corresponding Beta concentration
 parameter and comparing cutoff ages against all 18 Habbema benchmarks.
 
-Math: For Beta(α, β) with mean=0.25:
-  CV = sqrt(0.75 / (0.25 * (conc + 1)))
-  conc = 3/CV² - 1
+Math: For Beta(α, β) with mean=m:
+  CV = sqrt((1-m) / (m * (conc + 1)))
+  conc = (1-m)/(m*CV²) - 1
 
 Usage:
   cd backend && python -m scripts.test_concentrations
@@ -52,8 +52,11 @@ HABBEMA = {
 # CVs to test
 TEST_CVS = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
 
+# Must match _BASE_FECUNDABILITY in curves.py
+BASE_MEAN = 0.23
 
-def cv_to_concentration(cv: float, mean: float = 0.25) -> float:
+
+def cv_to_concentration(cv: float, mean: float = BASE_MEAN) -> float:
     """Convert CV to Beta concentration parameter.
 
     For Beta(α, β) with α = mean*conc, β = (1-mean)*conc:
@@ -70,11 +73,18 @@ def find_cutoff(desired_children: int, threshold: float, ivf: bool) -> tuple[flo
     last_passing_rate = 0.0
     for age_10x in range(180, 451):
         age = age_10x / 10.0
+        # Match Habbema's IVF timing protocol
+        habbema_cycles_before_ivf = 12
+        if age <= 33:
+            habbema_cycles_before_ivf = 36
+        elif age <= 38:
+            habbema_cycles_before_ivf = 24
         result = run_simulation(
             SimulationParams(
                 female_age=age,
                 desired_children=desired_children,
                 ivf_willingness="yes" if ivf else "no",
+                cycles_before_ivf=habbema_cycles_before_ivf,
             )
         )
         if result.completion_rate >= threshold:
@@ -85,7 +95,7 @@ def find_cutoff(desired_children: int, threshold: float, ivf: bool) -> tuple[flo
     return last_passing_age, last_passing_rate
 
 
-def distribution_percentiles(concentration: float, mean: float = 0.25) -> dict[str, float]:
+def distribution_percentiles(concentration: float, mean: float = BASE_MEAN) -> dict[str, float]:
     """Compute percentiles of Beta(mean*conc, (1-mean)*conc)."""
     from scipy.stats import beta as beta_dist
     alpha = mean * concentration
@@ -154,7 +164,7 @@ def main():
     log("Benchmarking Beta Distribution CV Options for Fecundability")
     log("=" * 80)
     log()
-    log("CV-to-Concentration mapping (mean=0.25):")
+    log(f"CV-to-Concentration mapping (mean={BASE_MEAN}):")
     for cv in TEST_CVS:
         conc = cv_to_concentration(cv)
         log(f"  CV={cv:.2f}  →  conc={conc:.2f}")

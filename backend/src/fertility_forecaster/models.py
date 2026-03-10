@@ -56,7 +56,7 @@ class SimulationParams:
 
     @property
     def max_months(self) -> int:
-        return int((45 - self.female_age) * 12) + 1
+        return int((50 - self.female_age) * 12) + 1
 
 
 @dataclass

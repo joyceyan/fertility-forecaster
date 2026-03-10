@@ -20,7 +20,6 @@ from .curves import (
     miscarriage_curve,
     recurrent_miscarriage_or,
     smoking_fecundability_fr,
-    sterility_curve,
 )
 from .models import SimulationParams, SimulationResult
 
@@ -85,29 +84,6 @@ def run_simulation(
     if has_male_age:
         male_age = np.full(N, params.male_age, dtype=float)
 
-    # Sterility tracking — each couple gets a random threshold; they become
-    # permanently sterile (for natural conception) when the age-dependent
-    # cumulative sterility probability exceeds their threshold.
-    # If user has prior conceptions, condition the threshold on known fertility:
-    # their threshold must be above the sterility curve at their last known
-    # fertile age (since they demonstrably conceived at that age).
-    if has_prior_conceptions:
-        if params.age_at_last_birth is not None:
-            last_fertile_age = params.age_at_last_birth
-        elif params.age_at_last_miscarriage is not None:
-            last_fertile_age = params.age_at_last_miscarriage
-        else:
-            last_fertile_age = params.female_age - 2.0  # conservative fallback
-        min_threshold = float(sterility_curve(np.array([last_fertile_age]))[0])
-        sterility_thresholds = min_threshold + rng.random(N) * (1.0 - min_threshold)
-    else:
-        sterility_thresholds = rng.random(N)
-    # Determine which couples are already sterile at the starting age,
-    # so they are excluded from the fecundability draw (avoiding double-
-    # counting low-fertility and sterility in the same couple).
-    init_sterility_prob = float(sterility_curve(np.array([params.female_age]))[0])
-    already_sterile = init_sterility_prob >= sterility_thresholds
-
     # --- Frozen embryo batches (sorted youngest-first) ---
     embryo_batches_sorted = sorted(params.frozen_embryo_batches, key=lambda b: b.age_at_freeze)
     B_e = len(embryo_batches_sorted)
@@ -146,17 +122,10 @@ def run_simulation(
     # --- Individual fecundability draws ---
     # Each couple gets a fixed "fertility type" drawn from a Beta distribution.
     # Age-related decline is applied as a ratio on top of their individual value.
-    # Only non-sterile couples draw from the distribution; sterile couples
-    # stay at 0, since permanent sterility is a separate mechanism from
-    # fecundability heterogeneity among fertile couples.
     init_mean_fecund = float(fecundability_curve(np.array([params.female_age]), gravid=use_gravid)[0])
-    individual_fecund = np.zeros(N, dtype=float)
-    fertile_mask = ~already_sterile
-    n_fertile = int(np.sum(fertile_mask))
-    if n_fertile > 0:
-        individual_fecund[fertile_mask] = draw_individual_fecundabilities(
-            init_mean_fecund, n_fertile, rng, cycles_tried=params.cycles_tried,
-        )
+    individual_fecund = draw_individual_fecundabilities(
+        init_mean_fecund, N, rng, cycles_tried=params.cycles_tried,
+    )
     # Store the starting-age population mean for computing age ratios
     starting_age_mean = init_mean_fecund
 
@@ -166,8 +135,8 @@ def run_simulation(
         if not np.any(active):
             break
 
-        # 1. Deactivate couples where age >= 45
-        too_old = active & (age >= 45.0)
+        # 1. Deactivate couples where age >= 50
+        too_old = active & (age >= 50.0)
         active[too_old] = False
 
         # 2. Handle waiting couples
@@ -179,13 +148,7 @@ def run_simulation(
         if not np.any(active & ~is_waiting):
             continue
 
-        # 3. Update sterility status — couples become permanently sterile
-        #    when the cumulative sterility prob for their age exceeds their threshold.
-        current_sterility_prob = sterility_curve(age)
-        newly_sterile = ~already_sterile & (current_sterility_prob >= sterility_thresholds)
-        already_sterile |= newly_sterile
-
-        # 4. Identify trying couples (active AND not waiting)
+        # 3. Identify trying couples (active AND not waiting)
         trying = active & (waiting_months <= 0)
         if not np.any(trying):
             continue
@@ -225,7 +188,7 @@ def run_simulation(
         # 6. Compute conception probability
         p_conceive = np.zeros(N, dtype=float)
 
-        # Natural pathway (sterile couples get p=0)
+        # Natural pathway
         natural = trying & ~on_ivf & ~using_frozen_embryo & ~using_frozen_egg
         if np.any(natural):
             # Age-ratio decline: current population mean / starting population mean
@@ -236,7 +199,6 @@ def run_simulation(
                 age_ratio = np.zeros_like(current_mean)
             p_natural = individual_fecund[natural] * age_ratio
             p_natural *= bmi_fr * smoking_fr
-            p_natural[already_sterile[natural]] = 0.0
             p_conceive[natural] = p_natural
 
         # Fresh IVF pathway

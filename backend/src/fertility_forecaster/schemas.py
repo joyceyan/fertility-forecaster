@@ -147,7 +147,6 @@ class ParamsUsed(BaseModel):
     bmi_natural_fr: float
     bmi_ivf_fr: float
     smoking_fr: float
-    sterility_at_start: float
 
 
 class SimulateResponse(BaseModel):

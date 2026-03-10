@@ -16,7 +16,7 @@ from fertility_forecaster.curves import (
     miscarriage_curve,
     recurrent_miscarriage_or,
     smoking_fecundability_fr,
-    sterility_curve,
+
 )
 from fertility_forecaster.models import SmokingStatus
 
@@ -26,13 +26,13 @@ class TestFecundabilityNulligravid:
         # Wesselink 2017 Table 3 nulligravid FRs at bracket midpoints
         ages = np.array([21, 26, 29, 32, 35, 38, 42.5])
         rates = fecundability_curve(ages, gravid=False)
-        expected = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20]) * 0.25
+        expected = np.array([1.00, 0.88, 0.80, 0.84, 0.68, 0.51, 0.20]) * 0.23
         np.testing.assert_allclose(rates, expected, atol=1e-6)
 
     def test_interpolation_between_points(self):
         rate = fecundability_curve(np.array([30.0]), gravid=False)[0]
-        # Between age 29 (0.80*0.25=0.200) and 32 (0.84*0.25=0.210)
-        assert 0.19 < rate < 0.22
+        # Between age 29 (0.80*0.23=0.184) and 32 (0.84*0.23=0.193)
+        assert 0.18 < rate < 0.20
 
     def test_overall_decline(self):
         """Rates at oldest ages are substantially lower than youngest."""
@@ -43,8 +43,8 @@ class TestFecundabilityNulligravid:
     def test_clamped_at_boundaries(self):
         young = fecundability_curve(np.array([15.0]), gravid=False)[0]
         old = fecundability_curve(np.array([50.0]), gravid=False)[0]
-        assert young == pytest.approx(0.25, abs=1e-6)
-        assert old == pytest.approx(0.20 * 0.25, abs=1e-6)
+        assert young == pytest.approx(0.23, abs=1e-6)
+        assert old == pytest.approx(0.0, abs=1e-6)
 
     def test_vectorized_shape(self):
         ages = np.array([25, 30, 35, 40])
@@ -59,7 +59,7 @@ class TestFecundabilityGravid:
         rates = fecundability_curve(ages, gravid=True)
         # Raw gravid FRs from Wesselink 2017 Table 3
         expected_fr = np.array([1.00, 0.92, 0.95, 0.88, 0.96, 0.70, 0.48])
-        expected = expected_fr * 0.25
+        expected = expected_fr * 0.23
         np.testing.assert_allclose(rates, expected, atol=1e-6)
 
     def test_gravid_higher_than_nulligravid_at_35(self):
@@ -73,7 +73,7 @@ class TestFecundabilityGravid:
         """At age 35, raw gravid FR=0.96 is substantially higher than nulligravid FR=0.68."""
         rate_gravid = fecundability_curve(np.array([35.0]), gravid=True)[0]
         rate_nulligravid = fecundability_curve(np.array([35.0]), gravid=False)[0]
-        assert rate_gravid == pytest.approx(0.25 * 0.96, abs=1e-6)
+        assert rate_gravid == pytest.approx(0.23 * 0.96, abs=1e-6)
         assert rate_gravid > rate_nulligravid * 1.20  # divergence exceeds 1.20x
 
     def test_gravid_higher_at_27(self):
@@ -331,59 +331,28 @@ class TestSmokingFR:
         assert smoking_fecundability_fr(SmokingStatus.CURRENT_REGULAR) == 0.77
 
 
-# --- Phase 1e: Sterility curve tests ---
-
-class TestSterilityCurve:
-    """Test 1: Verify sterility_curve returns expected values at data points."""
-
-    def test_exact_known_points(self):
-        ages = np.array([20, 25, 30, 35, 38, 40, 42, 45], dtype=float)
-        expected = np.array([0.005, 0.01, 0.02, 0.05, 0.10, 0.17, 0.30, 0.55])
-        np.testing.assert_allclose(sterility_curve(ages), expected, atol=1e-6)
-
-    def test_monotonically_increasing(self):
-        ages = np.arange(20, 46, dtype=float)
-        rates = sterility_curve(ages)
-        assert np.all(np.diff(rates) >= 0)
-
-    def test_interpolation_between_points(self):
-        rate = sterility_curve(np.array([32.5]))[0]
-        # Between age 30 (0.02) and 35 (0.05): 0.02 + 0.5*(0.05-0.02) = 0.035
-        assert rate == pytest.approx(0.035, abs=1e-6)
-
-    def test_clamped_at_boundaries(self):
-        young = sterility_curve(np.array([15.0]))[0]
-        old = sterility_curve(np.array([50.0]))[0]
-        assert young == pytest.approx(0.005, abs=1e-6)  # clamped to youngest
-        assert old == pytest.approx(0.55, abs=1e-6)  # clamped to oldest
-
-    def test_vectorized_shape(self):
-        result = sterility_curve(np.array([25, 35, 45], dtype=float))
-        assert result.shape == (3,)
-
-
 class TestBaseFecundability:
-    """Test 5: Verify base fecundability is 0.25."""
+    """Test 5: Verify base fecundability is 0.23."""
 
     def test_base_rate_at_young_age(self):
-        """At age 20 (nulligravid), per-cycle probability should be 0.25 × 1.00 = 0.25."""
+        """At age 20 (nulligravid), per-cycle probability should be 0.23 × 1.00 = 0.23."""
         rate = fecundability_curve(np.array([20.0]), gravid=False)[0]
         # Age 20 is below age 21 data point (FR=1.00), clamped to 1.00
-        assert rate == pytest.approx(0.25, abs=1e-6)
+        assert rate == pytest.approx(0.23, abs=1e-6)
 
     def test_base_rate_at_21(self):
-        """At age 21, exact data point: 0.25 × 1.00 = 0.25."""
+        """At age 21, exact data point: 0.23 × 1.00 = 0.23."""
         rate = fecundability_curve(np.array([21.0]), gravid=False)[0]
-        assert rate == pytest.approx(0.25, abs=1e-6)
+        assert rate == pytest.approx(0.23, abs=1e-6)
 
 
 class TestGravidRawRatios:
     """Test 6 & 7: Verify raw gravid Wesselink ratios are used without capping."""
 
     def test_gravid_raw_at_35(self):
-        """At age 35, raw gravid FR=0.96. Per-cycle gravid = 0.25 × 0.96 = 0.24."""
+        """At age 35, raw gravid FR=0.96. Per-cycle gravid = 0.23 × 0.96 = 0.2208."""
         rate = fecundability_curve(np.array([35.0]), gravid=True)[0]
-        assert rate == pytest.approx(0.25 * 0.96, abs=1e-6)
+        assert rate == pytest.approx(0.23 * 0.96, abs=1e-6)
 
     def test_gravid_exceeds_nulligravid_at_35(self):
         """At age 35, gravid FR (0.96) significantly exceeds nulligravid FR (0.68).

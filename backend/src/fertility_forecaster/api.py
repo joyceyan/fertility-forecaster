@@ -8,7 +8,6 @@ import os
 import time
 from pathlib import Path
 
-import numpy as np
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,7 +18,6 @@ from .curves import (
     bmi_fecundability_fr,
     bmi_ivf_adjustment,
     smoking_fecundability_fr,
-    sterility_curve,
 )
 from .models import (
     FrozenEggBatch,
@@ -133,7 +131,6 @@ def simulate(req: SimulateRequest):
         bmi_natural_fr=bmi_fecundability_fr(req.bmi),
         bmi_ivf_fr=bmi_ivf_adjustment(req.bmi),
         smoking_fr=smoking_fecundability_fr(smoking),
-        sterility_at_start=float(sterility_curve(np.array([req.female_age]))[0]),
     )
 
     return SimulateResponse(
