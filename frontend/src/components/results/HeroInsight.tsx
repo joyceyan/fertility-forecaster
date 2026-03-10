@@ -23,10 +23,6 @@ export default function HeroInsight({ insight }: Props) {
           With IVF as a fallback: {formatPercent(insight.ivfRate)}
         </p>
       )}
-
-      <p className="mt-2 text-sm leading-relaxed text-stone-600">
-        {insight.detail}
-      </p>
     </div>
   );
 }

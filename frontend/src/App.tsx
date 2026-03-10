@@ -76,8 +76,8 @@ export default function App() {
           Fertility Forecaster
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Calculate your odds of getting pregnant at every age. See how timing,
-          egg freezing, and IVF affect your chances of completing your family.
+          See how likely you are to have the family you want based on when you
+          start, and how timing, egg freezing, and IVF affect your chances.
         </p>
       </header>
 
