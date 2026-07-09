@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fertility Forecaster is a Monte Carlo simulation tool that estimates the probability of completing a desired family size given a user's age, health, reproductive history, and available fertility interventions. The model simulates 10,000 virtual couples cycle-by-cycle, incorporating published data on natural conception rates, miscarriage risk, IVF outcomes, and frozen egg/embryo success rates.
+Fertility Forecaster is a Monte Carlo simulation tool that estimates the probability of completing a desired family size given a user's age, health, reproductive history, and available fertility interventions. The model simulates 5,000 virtual couples cycle-by-cycle, incorporating published data on natural conception rates, miscarriage risk, IVF outcomes, and frozen egg/embryo success rates.
 
 This document describes every data source used in the model, what it contributes, and how the inputs interact.
 
@@ -19,7 +19,7 @@ At a high level, the simulation runs a loop for each virtual couple:
 5. If the couple fails to conceive naturally for `cycles_before_ivf` consecutive cycles (default 12) and is open to assisted reproduction, the model uses frozen embryos first (if available), then frozen eggs (if available), then fresh IVF — up to `max_ivf_cycles` fresh IVF cycles per child (default 3). The counter resets after each live birth. Frozen embryo and frozen egg cycles do not count toward this cap.
 6. The loop repeats until the couple achieves their desired number of children or the woman turns 50.
 
-After simulating all 10,000 couples, the model reports what percentage achieved the desired family size, how long it took, and what proportion of successes came from each conception method (natural, fresh IVF, frozen egg IVF, frozen embryo transfer).
+After simulating all 5,000 couples, the model reports what percentage achieved the desired family size, how long it took, and what proportion of successes came from each conception method (natural, fresh IVF, frozen egg IVF, frozen embryo transfer).
 
 ---
 
@@ -359,7 +359,7 @@ The following parameters can be configured by the user:
 | `cycles_tried` | 0 | Months already spent trying (shifts fecundability draws lower) |
 | `frozen_egg_batches` | () | Batches of frozen eggs (age at freeze, count) |
 | `frozen_embryo_batches` | () | Batches of frozen embryos (age at freeze, count) |
-| `num_simulations` | 10,000 | Number of Monte Carlo couples |
+| `num_simulations` | 5,000 | Number of Monte Carlo couples |
 
 ---
 

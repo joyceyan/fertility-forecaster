@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { postSweep } from "../api/client";
+import { useCallback, useRef, useState } from "react";
 import type { FormState, SweepRequest, SweepResponse } from "../api/types";
 import { SWEEP_AGE_END, SWEEP_AGE_START, SWEEP_AGE_STEP } from "../constants/defaults";
+import { computeSweep } from "../simulation/sweep";
 
 type SweepStatus = "idle" | "loading" | "success" | "error";
 
@@ -42,31 +42,27 @@ export function useSweep(): UseSweepResult {
   const [data, setData] = useState<SweepResponse | null>(null);
   const [status, setStatus] = useState<SweepStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const runIdRef = useRef(0);
 
   const run = useCallback((form: FormState) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    const runId = ++runIdRef.current;
 
     setStatus("loading");
     setError(null);
 
-    postSweep(formToRequest(form), controller.signal)
-      .then((response) => {
-        if (controller.signal.aborted) return;
+    // Run in a microtask to allow the UI to show the loading state
+    setTimeout(() => {
+      try {
+        const response = computeSweep(formToRequest(form));
+        if (runId !== runIdRef.current) return; // stale
         setData(response);
         setStatus("success");
-      })
-      .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+      } catch (err: unknown) {
+        if (runId !== runIdRef.current) return;
         setError(err instanceof Error ? err.message : "Unknown error");
         setStatus("error");
-      });
-  }, []);
-
-  useEffect(() => {
-    return () => abortRef.current?.abort();
+      }
+    }, 0);
   }, []);
 
   return { data, status, error, run };

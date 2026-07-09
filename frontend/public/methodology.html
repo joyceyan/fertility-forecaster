@@ -125,11 +125,11 @@
       <!-- Overview -->
       <h2>Overview</h2>
       <p>
-        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>When should I start trying to conceive? What is the cost of waiting 1 or 2 more years? How much does IVF improve my chances? Should I freeze my eggs?</em> The model uses published medical research to simulate 10,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
+        Fertility Forecaster is a free, evidence-based calculator that estimates your probability of having the family you want. It answers questions like: <em>When should I start trying to conceive? What is the cost of waiting 1 or 2 more years? How much does IVF improve my chances? Should I freeze my eggs?</em> The model uses published medical research to simulate 5,000 couples and show you how age, lifestyle, egg freezing, and IVF affect your fertility outcomes.</p>
 
       <!-- How the Model Works -->
       <h2>How the Model Works</h2>
-      <p>At a high level, the simulation runs a loop for 10,000 virtual couples. For each virtual couple:</p>
+      <p>At a high level, the simulation runs a loop for 5,000 virtual couples. For each virtual couple:</p>
       <ol>
         <li>Each couple is assigned a base fertility rate &mdash; some couples are naturally more fertile than others. On average, this starts at about a 23% chance of getting pregnant each cycle.</li>
         <li>The model adjusts that couple's conception odds based on the woman's current age, BMI, and smoking status. Older women, women with higher BMI, and smokers typically have lower fertility.</li>
@@ -139,7 +139,7 @@
         <li>If the couple exhausts all fresh IVF attempts for that child (default 3 cycles per child), they return to natural conception. The IVF cycle counter resets after each live birth, so the couple can try IVF again for subsequent children. Frozen embryo and frozen egg cycles do not count toward this cap.</li>
         <li>The loop repeats until the couple achieves their desired number of children or the woman turns 50.</li>
       </ol>
-      <p>After simulating all 10,000 couples, the model reports what percentage achieved the desired family size.</p>
+      <p>After simulating all 5,000 couples, the model reports what percentage achieved the desired family size.</p>
 
       <!-- Data Sources -->
       <h2>Data Sources</h2>
