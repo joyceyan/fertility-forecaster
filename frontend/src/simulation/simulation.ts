@@ -82,7 +82,7 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
       completionRate: 1.0,
       medianTimeToCompletionMonths: 0.0,
       meanAgeAtCompletion: params.femaleAge,
-      timeDistribution: [1.0, ...new Array(11).fill(0)],
+      timeDistribution: [1.0, ...new Array<number>(11).fill(0)],
       completionByMethod: {
         natural: 1.0,
         ivf_fresh: 0.0,
@@ -119,7 +119,7 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
   // Per-couple state
   const age = new Float64Array(N).fill(params.femaleAge);
-  const maleAge = hasMaleAge ? new Float64Array(N).fill(params.maleAge!) : null;
+  const maleAgeArr = hasMaleAge ? new Float64Array(N).fill(params.maleAge!) : null;
   const childrenBorn = new Int32Array(N).fill(params.priorLiveBirths);
   const cyclesTried = new Int32Array(N).fill(params.cyclesTried);
   const active = new Uint8Array(N).fill(1);
@@ -156,25 +156,25 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
     // 1. Deactivate couples where age >= 50
     for (let i = 0; i < N; i++) {
-      if (active[i] && age[i] >= 50.0) active[i] = 0;
+      if (active[i] && age[i]! >= 50.0) active[i] = 0;
     }
 
     // 2. Handle waiting couples
     for (let i = 0; i < N; i++) {
-      if (active[i] && waitingMonths[i] > 0) {
-        waitingMonths[i]--;
-        age[i] += 1.0 / 12.0;
-        if (maleAge) maleAge[i] += 1.0 / 12.0;
+      if (active[i] && waitingMonths[i]! > 0) {
+        waitingMonths[i] = waitingMonths[i]! - 1;
+        age[i] = age[i]! + 1.0 / 12.0;
+        if (maleAgeArr) maleAgeArr[i] = maleAgeArr[i]! + 1.0 / 12.0;
       }
     }
 
     // 3. Identify trying couples
     for (let i = 0; i < N; i++) {
-      if (!active[i] || waitingMonths[i] > 0) continue;
+      if (!active[i] || waitingMonths[i]! > 0) continue;
 
       // Check eligibility for assisted reproduction
       const eligibleForAssisted =
-        cyclesTried[i] >= params.cyclesBeforeIvf &&
+        cyclesTried[i]! >= params.cyclesBeforeIvf &&
         params.ivfWillingness !== "no" &&
         !onIvf[i] &&
         !ivfExhausted[i] &&
@@ -185,8 +185,9 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
         let assigned = false;
         // Priority 1: Frozen embryos
         if (!assigned && embryoBatchRemaining) {
+          const coupleEmbryos = embryoBatchRemaining[i]!;
           for (let bidx = 0; bidx < Be; bidx++) {
-            if (currentEmbryoBatchIdx[i] === -1 && embryoBatchRemaining[i][bidx] > 0) {
+            if (currentEmbryoBatchIdx[i] === -1 && coupleEmbryos[bidx]! > 0) {
               usingFrozenEmbryo[i] = 1;
               currentEmbryoBatchIdx[i] = bidx;
               assigned = true;
@@ -196,8 +197,9 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
         }
         // Priority 2: Frozen eggs
         if (!assigned && eggBatchRemaining) {
+          const coupleEggs = eggBatchRemaining[i]!;
           for (let bidx = 0; bidx < Bg; bidx++) {
-            if (currentEggBatchIdx[i] === -1 && eggBatchRemaining[i][bidx] > 0) {
+            if (currentEggBatchIdx[i] === -1 && coupleEggs[bidx]! > 0) {
               usingFrozenEgg[i] = 1;
               currentEggBatchIdx[i] = bidx;
               assigned = true;
@@ -216,28 +218,31 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
       const isNatural = !onIvf[i] && !usingFrozenEmbryo[i] && !usingFrozenEgg[i];
 
       if (isNatural) {
-        const currentMean = fecundabilityCurve(age[i], useGravid);
+        const currentMean = fecundabilityCurve(age[i]!, useGravid);
         const ageRatio = startingAgeMean > 0 ? currentMean / startingAgeMean : 0;
-        pConceive = individualFecund[i] * ageRatio * bmiFr * smokingFr;
+        pConceive = individualFecund[i]! * ageRatio * bmiFr * smokingFr;
       } else if (onIvf[i]) {
-        const lbr = ivfSuccessRate(age[i]) * bmiIvf;
+        const lbr = ivfSuccessRate(age[i]!) * bmiIvf;
         pConceive = lbr / (1.0 - ART_MISCARRIAGE_RATE);
       } else if (usingFrozenEmbryo[i]) {
-        const bidx = currentEmbryoBatchIdx[i];
-        const creationAge = embryoBatchesSorted[bidx].age_at_freeze;
-        const pgtTested = embryoBatchesSorted[bidx].pgt_tested ?? false;
+        const bidx = currentEmbryoBatchIdx[i]!;
+        const batch = embryoBatchesSorted[bidx]!;
+        const creationAge = batch.age_at_freeze;
+        const pgtTested = batch.pgt_tested ?? false;
         const rate = pgtTested
           ? frozenEmbryoTransferRatePgt(creationAge)
           : frozenEmbryoTransferRate(creationAge);
         pConceive = (rate * bmiIvf) / (1.0 - ART_MISCARRIAGE_RATE);
         // Decrement embryo
-        if (bidx >= 0 && embryoBatchRemaining![i][bidx] > 0) {
-          embryoBatchRemaining![i][bidx]--;
+        const coupleEmbryos = embryoBatchRemaining![i]!;
+        if (bidx >= 0 && coupleEmbryos[bidx]! > 0) {
+          coupleEmbryos[bidx]!--;
         }
       } else if (usingFrozenEgg[i]) {
-        const bidx = currentEggBatchIdx[i];
-        const freezeAge = eggBatchesSorted[bidx].age_at_freeze;
-        const remaining = eggBatchRemaining![i][bidx];
+        const bidx = currentEggBatchIdx[i]!;
+        const freezeAge = eggBatchesSorted[bidx]!.age_at_freeze;
+        const coupleEggs = eggBatchRemaining![i]!;
+        const remaining = coupleEggs[bidx]!;
         const eggsThisCycle = Math.min(remaining, 9);
         const surviving = eggsThisCycle * OOCYTE_SURVIVAL_RATE;
         const perOocyte = frozenEggPerOocyteRate(freezeAge);
@@ -245,7 +250,7 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
         pConceive = pFg / (1.0 - ART_MISCARRIAGE_RATE);
         // Decrement eggs
         if (bidx >= 0) {
-          eggBatchRemaining![i][bidx] = Math.max(0, remaining - eggsThisCycle);
+          coupleEggs[bidx] = Math.max(0, remaining - eggsThisCycle);
         }
       }
 
@@ -262,10 +267,10 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
         if (isArt) {
           pMiscarriage = ART_MISCARRIAGE_RATE;
         } else {
-          pMiscarriage = miscarriageCurve(age[i]);
-          pMiscarriage = applyOddsRatio(pMiscarriage, recurrentMiscarriageOr(consecutiveMiscarriages[i]));
-          if (maleAge) {
-            pMiscarriage = applyOddsRatio(pMiscarriage, maleAgeMiscarriageOr(maleAge[i]));
+          pMiscarriage = miscarriageCurve(age[i]!);
+          pMiscarriage = applyOddsRatio(pMiscarriage, recurrentMiscarriageOr(consecutiveMiscarriages[i]!));
+          if (maleAgeArr) {
+            pMiscarriage = applyOddsRatio(pMiscarriage, maleAgeMiscarriageOr(maleAgeArr[i]!));
           }
         }
         pMiscarriage = Math.max(0, Math.min(1, pMiscarriage));
@@ -273,20 +278,22 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
         if (!miscarried) {
           // Live birth
-          const birthIdx = childrenBorn[i];
+          const birthIdx = childrenBorn[i]!;
           if (birthIdx < params.desiredChildren) {
-            birthAges[i][birthIdx] = age[i];
+            const coupleBirthAges = birthAges[i]!;
+            const coupleBirthMethods = birthMethods[i]!;
+            coupleBirthAges[birthIdx] = age[i]!;
             if (usingFrozenEmbryo[i]) {
-              birthMethods[i][birthIdx] = IVF_FROZEN_EMBRYO;
+              coupleBirthMethods[birthIdx] = IVF_FROZEN_EMBRYO;
             } else if (usingFrozenEgg[i]) {
-              birthMethods[i][birthIdx] = IVF_FROZEN_EGG;
+              coupleBirthMethods[birthIdx] = IVF_FROZEN_EGG;
             } else if (onIvf[i]) {
-              birthMethods[i][birthIdx] = IVF_FRESH;
+              coupleBirthMethods[birthIdx] = IVF_FRESH;
             } else {
-              birthMethods[i][birthIdx] = NATURAL;
+              coupleBirthMethods[birthIdx] = NATURAL;
             }
           }
-          childrenBorn[i]++;
+          childrenBorn[i] = childrenBorn[i]! + 1;
           waitingMonths[i] = params.minSpacingMonths;
           cyclesTried[i] = 0;
           onIvf[i] = 0;
@@ -298,13 +305,13 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
           ivfExhausted[i] = 0;
           consecutiveMiscarriages[i] = 0;
 
-          if (childrenBorn[i] >= params.desiredChildren) {
+          if (childrenBorn[i]! >= params.desiredChildren) {
             active[i] = 0;
           }
         } else {
           // Miscarriage recovery
           waitingMonths[i] = 3;
-          consecutiveMiscarriages[i]++;
+          consecutiveMiscarriages[i] = consecutiveMiscarriages[i]! + 1;
           onIvf[i] = 0;
           usingFrozenEmbryo[i] = 0;
           usingFrozenEgg[i] = 0;
@@ -313,12 +320,12 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
         }
       } else {
         // No conception
-        cyclesTried[i]++;
+        cyclesTried[i] = cyclesTried[i]! + 1;
 
         // IVF cycle tracking
         if (onIvf[i]) {
-          totalIvfCyclesUsed[i]++;
-          if (totalIvfCyclesUsed[i] >= params.maxIvfCycles) {
+          totalIvfCyclesUsed[i] = totalIvfCyclesUsed[i]! + 1;
+          if (totalIvfCyclesUsed[i]! >= params.maxIvfCycles) {
             onIvf[i] = 0;
             ivfExhausted[i] = 1;
           }
@@ -326,11 +333,12 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
         // Frozen embryo exhaustion
         if (usingFrozenEmbryo[i] && embryoBatchRemaining) {
-          const bidx = currentEmbryoBatchIdx[i];
-          if (bidx >= 0 && embryoBatchRemaining[i][bidx] <= 0) {
+          const bidx = currentEmbryoBatchIdx[i]!;
+          const coupleEmbryos = embryoBatchRemaining[i]!;
+          if (bidx >= 0 && coupleEmbryos[bidx]! <= 0) {
             let foundNext = false;
             for (let nextBidx = bidx + 1; nextBidx < Be; nextBidx++) {
-              if (embryoBatchRemaining[i][nextBidx] > 0) {
+              if (coupleEmbryos[nextBidx]! > 0) {
                 currentEmbryoBatchIdx[i] = nextBidx;
                 foundNext = true;
                 break;
@@ -345,11 +353,12 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
         // Frozen egg exhaustion
         if (usingFrozenEgg[i] && eggBatchRemaining) {
-          const bidx = currentEggBatchIdx[i];
-          if (bidx >= 0 && eggBatchRemaining[i][bidx] <= 0) {
+          const bidx = currentEggBatchIdx[i]!;
+          const coupleEggs = eggBatchRemaining[i]!;
+          if (bidx >= 0 && coupleEggs[bidx]! <= 0) {
             let foundNext = false;
             for (let nextBidx = bidx + 1; nextBidx < Bg; nextBidx++) {
-              if (eggBatchRemaining[i][nextBidx] > 0) {
+              if (coupleEggs[nextBidx]! > 0) {
                 currentEggBatchIdx[i] = nextBidx;
                 foundNext = true;
                 break;
@@ -365,11 +374,11 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
 
       // Advance age
       if (onIvf[i] || usingFrozenEmbryo[i] || usingFrozenEgg[i]) {
-        age[i] += 4.0 / 12.0;
-        if (maleAge) maleAge[i] += 4.0 / 12.0;
+        age[i] = age[i]! + 4.0 / 12.0;
+        if (maleAgeArr) maleAgeArr[i] = maleAgeArr[i]! + 4.0 / 12.0;
       } else {
-        age[i] += 1.0 / 12.0;
-        if (maleAge) maleAge[i] += 1.0 / 12.0;
+        age[i] = age[i]! + 1.0 / 12.0;
+        if (maleAgeArr) maleAgeArr[i] = maleAgeArr[i]! + 1.0 / 12.0;
       }
     }
   }
@@ -380,9 +389,9 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
   const completionAges: number[] = [];
 
   for (let i = 0; i < N; i++) {
-    if (childrenBorn[i] >= params.desiredChildren) {
+    if (childrenBorn[i]! >= params.desiredChildren) {
       completedCount++;
-      const lastBirthAge = birthAges[i][params.desiredChildren - 1];
+      const lastBirthAge = birthAges[i]![params.desiredChildren - 1]!;
       const timeMonths = (lastBirthAge - params.femaleAge) * 12.0;
       completionTimes.push(timeMonths);
       completionAges.push(lastBirthAge);
@@ -397,21 +406,21 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
     completionTimes.sort((a, b) => a - b);
     const mid = Math.floor(completionTimes.length / 2);
     medianTime = completionTimes.length % 2 === 0
-      ? (completionTimes[mid - 1] + completionTimes[mid]) / 2
-      : completionTimes[mid];
+      ? (completionTimes[mid - 1]! + completionTimes[mid]!) / 2
+      : completionTimes[mid]!;
     meanAge = completionAges.reduce((a, b) => a + b, 0) / completionAges.length;
   }
 
   // Time distribution histogram (12 bins)
-  const timeDistribution = new Array(12).fill(0);
+  const timeDistribution = new Array<number>(12).fill(0);
   if (completionTimes.length > 0) {
     const binWidth = maxMonths / 12;
     for (const t of completionTimes) {
       const bin = Math.min(Math.floor(t / binWidth), 11);
-      timeDistribution[bin]++;
+      timeDistribution[bin]!++;
     }
     for (let i = 0; i < 12; i++) {
-      timeDistribution[i] /= N;
+      timeDistribution[i]! /= N;
     }
   }
 
@@ -422,18 +431,19 @@ export function runSimulation(params: SimulationParams, seed = 42): SimulationRe
   let ivfFrozenEmbryoCount = 0;
 
   for (let i = 0; i < N; i++) {
-    if (childrenBorn[i] < params.desiredChildren) continue;
-    const methods = birthMethods[i];
+    if (childrenBorn[i]! < params.desiredChildren) continue;
+    const methods = birthMethods[i]!;
     let hasFrozenEmbryo = false;
     let hasFrozenEgg = false;
     let hasIvfFresh = false;
     let allNatural = true;
 
     for (let j = 0; j < params.desiredChildren; j++) {
-      if (methods[j] === IVF_FROZEN_EMBRYO) hasFrozenEmbryo = true;
-      if (methods[j] === IVF_FROZEN_EGG) hasFrozenEgg = true;
-      if (methods[j] === IVF_FRESH) hasIvfFresh = true;
-      if (methods[j] !== NATURAL && methods[j] !== 0) allNatural = false;
+      const m = methods[j]!;
+      if (m === IVF_FROZEN_EMBRYO) hasFrozenEmbryo = true;
+      if (m === IVF_FROZEN_EGG) hasFrozenEgg = true;
+      if (m === IVF_FRESH) hasIvfFresh = true;
+      if (m !== NATURAL && m !== 0) allNatural = false;
     }
 
     if (hasFrozenEmbryo) {

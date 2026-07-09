@@ -22,15 +22,15 @@ export const FECUNDABILITY_CONCENTRATION = 4.23;
 
 /** Linear interpolation matching numpy.interp behavior. */
 function interp(x: number, xp: number[], fp: number[]): number {
-  if (x <= xp[0]) return fp[0];
-  if (x >= xp[xp.length - 1]) return fp[fp.length - 1];
+  if (x <= xp[0]!) return fp[0]!;
+  if (x >= xp[xp.length - 1]!) return fp[fp.length - 1]!;
   for (let i = 1; i < xp.length; i++) {
-    if (x <= xp[i]) {
-      const t = (x - xp[i - 1]) / (xp[i] - xp[i - 1]);
-      return fp[i - 1] + t * (fp[i] - fp[i - 1]);
+    if (x <= xp[i]!) {
+      const t = (x - xp[i - 1]!) / (xp[i]! - xp[i - 1]!);
+      return fp[i - 1]! + t * (fp[i]! - fp[i - 1]!);
     }
   }
-  return fp[fp.length - 1];
+  return fp[fp.length - 1]!;
 }
 
 /** Monthly probability of conception by female age (natural intercourse). */

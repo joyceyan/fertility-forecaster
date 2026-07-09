@@ -31,15 +31,18 @@ export class PRNG {
 
   /** Returns a uniform random uint32. */
   private nextUint32(): number {
-    const s = this.s;
-    const result = Math.imul(s[1] * 5, 1) << 7 | Math.imul(s[1] * 5, 1) >>> 25;
-    const t = s[1] << 9;
-    s[2] ^= s[0];
-    s[3] ^= s[1];
-    s[1] ^= s[2];
-    s[0] ^= s[3];
-    s[2] ^= t;
-    s[3] = (s[3] << 11) | (s[3] >>> 21);
+    const s0 = this.s[0]!;
+    const s1 = this.s[1]!;
+    const s2 = this.s[2]!;
+    const s3 = this.s[3]!;
+    const result = Math.imul(s1 * 5, 1) << 7 | Math.imul(s1 * 5, 1) >>> 25;
+    const t = s1 << 9;
+    this.s[2] = s2 ^ s0;
+    this.s[3] = s3 ^ s1;
+    this.s[1] = (s1 ^ this.s[2]!);
+    this.s[0] = (s0 ^ this.s[3]!);
+    this.s[2] = this.s[2]! ^ t;
+    this.s[3] = (this.s[3]! << 11) | (this.s[3]! >>> 21);
     return (result * 9) >>> 0;
   }
 
