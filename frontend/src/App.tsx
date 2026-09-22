@@ -34,13 +34,13 @@ export default function App() {
   const hasStartedQuestionnaire = useRef(false);
 
   useEffect(() => {
-    trevo.track("forecaster_viewed");
+    trevo?.track("forecaster_viewed");
   }, [trevo]);
 
   const handleChange = useCallback((updates: Partial<DraftFormState>) => {
     if (!hasStartedQuestionnaire.current) {
       hasStartedQuestionnaire.current = true;
-      trevo.track("questionnaire_started");
+      trevo?.track("questionnaire_started");
     }
     setForm((prev) => ({ ...prev, ...updates }));
   }, [trevo]);
@@ -48,15 +48,15 @@ export default function App() {
   const handleSubmit = () => {
     const validated = validateDraft(form);
     if (!validated) return;
-    trevo.track("forecast_requested");
+    trevo?.track("forecast_requested");
     setSubmittedForm(validated);
     setWhatIfFreeze({ enabled: false, numEggs: getTypicalEggsRetrieved(validated.user_age) });
-    run(validated, () => trevo.track("forecast_generated"));
+    run(validated, { onSuccess: () => trevo?.track("forecast_generated") });
   };
 
   const handleWhatIfToggle = useCallback(
     (enabled: boolean) => {
-      if (enabled) trevo.track("freeze_scenario_started");
+      if (enabled) trevo?.track("freeze_scenario_started");
       setWhatIfFreeze((prev) => {
         const numEggs = enabled && submittedForm
           ? getTypicalEggsRetrieved(submittedForm.user_age)
@@ -65,7 +65,7 @@ export default function App() {
         if (submittedForm) {
           run(
             buildEffectiveForm(submittedForm, next),
-            enabled ? () => trevo.track("freeze_scenario_calculated") : undefined,
+            enabled ? { onSuccess: () => trevo?.track("freeze_scenario_calculated") } : undefined,
           );
         }
         return next;
@@ -81,7 +81,7 @@ export default function App() {
   const handleWhatIfApply = useCallback(() => {
     if (submittedForm) {
       setWhatIfFreeze((prev) => {
-        run(buildEffectiveForm(submittedForm, prev), () => trevo.track("freeze_scenario_calculated"));
+        run(buildEffectiveForm(submittedForm, prev), { onSuccess: () => trevo?.track("freeze_scenario_calculated") });
         return prev;
       });
     }
