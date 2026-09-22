@@ -30,7 +30,7 @@ export default function App() {
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null);
   const [whatIfFreeze, setWhatIfFreeze] = useState<WhatIfFreeze>({ enabled: false, numEggs: 15 });
   const { data, status, error, run } = useSweep();
-  const { track } = useTrevo();
+  const trevo = useTrevo();
 
   const handleChange = useCallback((updates: Partial<DraftFormState>) => {
     setForm((prev) => ({ ...prev, ...updates }));
@@ -39,10 +39,10 @@ export default function App() {
   const handleSubmit = () => {
     const validated = validateDraft(form);
     if (!validated) return;
-    track("forecast_requested");
+    trevo?.track("forecast_requested");
     setSubmittedForm(validated);
     setWhatIfFreeze({ enabled: false, numEggs: getTypicalEggsRetrieved(validated.user_age) });
-    run(validated, { onSuccess: () => track("forecast_generated") });
+    run(validated, { onSuccess: () => trevo?.track("forecast_generated") });
   };
 
   const handleWhatIfToggle = useCallback(
