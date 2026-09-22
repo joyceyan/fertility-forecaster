@@ -9,7 +9,7 @@ interface UseSweepResult {
   data: SweepResponse | null;
   status: SweepStatus;
   error: string | null;
-  run: (form: FormState) => void;
+  run: (form: FormState, onSuccess?: () => void) => void;
 }
 
 function formToRequest(form: FormState): SweepRequest {
@@ -44,7 +44,7 @@ export function useSweep(): UseSweepResult {
   const [error, setError] = useState<string | null>(null);
   const runIdRef = useRef(0);
 
-  const run = useCallback((form: FormState) => {
+  const run = useCallback((form: FormState, onSuccess?: () => void) => {
     const runId = ++runIdRef.current;
 
     setStatus("loading");
@@ -57,6 +57,7 @@ export function useSweep(): UseSweepResult {
         if (runId !== runIdRef.current) return; // stale
         setData(response);
         setStatus("success");
+        onSuccess?.();
       } catch (err: unknown) {
         if (runId !== runIdRef.current) return;
         setError(err instanceof Error ? err.message : "Unknown error");

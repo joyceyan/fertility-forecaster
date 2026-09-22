@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useTrevo } from "@trevosdk/react";
 import type { DraftFormState, FormState } from "./api/types";
 import { validateDraft } from "./api/types";
 import { INITIAL_DRAFT } from "./constants/defaults";
@@ -25,35 +26,52 @@ function buildEffectiveForm(base: FormState, freeze: WhatIfFreeze): FormState {
 }
 
 export default function App() {
+  const trevo = useTrevo();
   const [form, setForm] = useState<DraftFormState>(INITIAL_DRAFT);
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null);
   const [whatIfFreeze, setWhatIfFreeze] = useState<WhatIfFreeze>({ enabled: false, numEggs: 15 });
   const { data, status, error, run } = useSweep();
+  const hasStartedQuestionnaire = useRef(false);
+
+  useEffect(() => {
+    trevo.track("forecaster_viewed");
+  }, [trevo]);
 
   const handleChange = useCallback((updates: Partial<DraftFormState>) => {
+    if (!hasStartedQuestionnaire.current) {
+      hasStartedQuestionnaire.current = true;
+      trevo.track("questionnaire_started");
+    }
     setForm((prev) => ({ ...prev, ...updates }));
-  }, []);
+  }, [trevo]);
 
   const handleSubmit = () => {
     const validated = validateDraft(form);
     if (!validated) return;
+    trevo.track("forecast_requested");
     setSubmittedForm(validated);
     setWhatIfFreeze({ enabled: false, numEggs: getTypicalEggsRetrieved(validated.user_age) });
-    run(validated);
+    run(validated, () => trevo.track("forecast_generated"));
   };
 
   const handleWhatIfToggle = useCallback(
     (enabled: boolean) => {
+      if (enabled) trevo.track("freeze_scenario_started");
       setWhatIfFreeze((prev) => {
         const numEggs = enabled && submittedForm
           ? getTypicalEggsRetrieved(submittedForm.user_age)
           : prev.numEggs;
         const next = { enabled, numEggs };
-        if (submittedForm) run(buildEffectiveForm(submittedForm, next));
+        if (submittedForm) {
+          run(
+            buildEffectiveForm(submittedForm, next),
+            enabled ? () => trevo.track("freeze_scenario_calculated") : undefined,
+          );
+        }
         return next;
       });
     },
-    [submittedForm, run],
+    [submittedForm, run, trevo],
   );
 
   const handleWhatIfNumEggs = useCallback((numEggs: number) => {
@@ -63,11 +81,11 @@ export default function App() {
   const handleWhatIfApply = useCallback(() => {
     if (submittedForm) {
       setWhatIfFreeze((prev) => {
-        run(buildEffectiveForm(submittedForm, prev));
+        run(buildEffectiveForm(submittedForm, prev), () => trevo.track("freeze_scenario_calculated"));
         return prev;
       });
     }
-  }, [submittedForm, run]);
+  }, [submittedForm, run, trevo]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
