@@ -1,19 +1,26 @@
+import { useExperiment, defineExperiment, assertNever } from "@trevosdk/react";
 import type { DraftFormState, IvfWillingness } from "../../api/types";
 import CollapsibleSection from "./CollapsibleSection";
 import HealthLifestyle from "./HealthLifestyle";
 import FrozenStorage from "./FrozenStorage";
 import AdvancedParams from "./AdvancedParams";
+import InputFormProgressiveVariant from "./InputFormProgressiveVariant";
 import { inputClass, inlineSelectClass } from "./styles";
 import { SWEEP_AGE_START, SWEEP_AGE_END, DEFAULT_FALLBACK_AGE } from "../../constants/defaults";
 
-interface Props {
+export interface Props {
   form: DraftFormState;
   onChange: (updates: Partial<DraftFormState>) => void;
   onSubmit: () => void;
   loading: boolean;
 }
 
-function PillToggle({
+const forecastQuestionnaireExperiment = defineExperiment(
+  "ask-the-forecast-questions-in-short",
+  ["control", "variant"],
+);
+
+export function PillToggle({
   value,
   onChange,
   label,
@@ -51,6 +58,8 @@ function PillToggle({
 }
 
 export default function InputForm({ form, onChange, onSubmit, loading }: Props) {
+  const variant = useExperiment(forecastQuestionnaireExperiment);
+
   const ageError =
     form.user_age !== null && (form.user_age < SWEEP_AGE_START || form.user_age > SWEEP_AGE_END)
       ? `Please enter an age between ${SWEEP_AGE_START} and ${SWEEP_AGE_END}`
@@ -60,6 +69,21 @@ export default function InputForm({ form, onChange, onSubmit, loading }: Props) 
     !ageError &&
     form.desired_children !== null;
   const userAge = form.user_age ?? DEFAULT_FALLBACK_AGE;
+
+  if (variant === "variant") {
+    return (
+      <InputFormProgressiveVariant
+        form={form}
+        onChange={onChange}
+        onSubmit={onSubmit}
+        loading={loading}
+      />
+    );
+  }
+
+  if (variant !== "control") {
+    return assertNever(variant);
+  }
 
   return (
     <form
