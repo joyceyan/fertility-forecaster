@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTrevo } from "@trevosdk/react";
 import type { DraftFormState, FormState } from "./api/types";
 import { validateDraft } from "./api/types";
 import { INITIAL_DRAFT } from "./constants/defaults";
@@ -29,6 +30,7 @@ export default function App() {
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null);
   const [whatIfFreeze, setWhatIfFreeze] = useState<WhatIfFreeze>({ enabled: false, numEggs: 15 });
   const { data, status, error, run } = useSweep();
+  const { track } = useTrevo();
 
   const handleChange = useCallback((updates: Partial<DraftFormState>) => {
     setForm((prev) => ({ ...prev, ...updates }));
@@ -37,9 +39,10 @@ export default function App() {
   const handleSubmit = () => {
     const validated = validateDraft(form);
     if (!validated) return;
+    track("forecast_requested");
     setSubmittedForm(validated);
     setWhatIfFreeze({ enabled: false, numEggs: getTypicalEggsRetrieved(validated.user_age) });
-    run(validated);
+    run(validated, { onSuccess: () => track("forecast_generated") });
   };
 
   const handleWhatIfToggle = useCallback(
