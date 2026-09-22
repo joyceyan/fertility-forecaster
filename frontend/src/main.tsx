@@ -6,7 +6,7 @@ import "./App.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <TrevoProvider apiKey={import.meta.env.VITE_TREVO_API_KEY}>
+    <TrevoProvider apiKey="tsk_live_668841ab3e40f69e96051f8c29cf3af0">
       <App />
     </TrevoProvider>
   </StrictMode>,
