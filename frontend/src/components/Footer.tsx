@@ -1,5 +1,15 @@
+import { useExperiment, defineExperiment, assertNever } from "@trevosdk/react";
+import EarlyMethodologyNotice from "./EarlyMethodologyNotice";
+
+const earlyMethodologyNoticeExperiment = defineExperiment(
+  "surface-the-existing-methodology-before",
+  ["control", "variant"],
+);
+
 export default function Footer() {
-  return (
+  const variant = useExperiment(earlyMethodologyNoticeExperiment);
+
+  const footer = (
     <footer className="mt-12 border-t border-stone-200 pt-8 pb-12">
       <p className="text-xs leading-relaxed text-stone-500">
         <strong>Disclaimer:</strong> Fertility Forecaster provides statistical
@@ -25,4 +35,19 @@ export default function Footer() {
       </div>
     </footer>
   );
+
+  if (variant === "variant") {
+    return (
+      <>
+        <EarlyMethodologyNotice />
+        {footer}
+      </>
+    );
+  }
+
+  if (variant !== "control") {
+    return assertNever(variant);
+  }
+
+  return footer;
 }
