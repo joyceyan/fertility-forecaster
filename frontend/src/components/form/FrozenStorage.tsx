@@ -1,12 +1,29 @@
+import { useExperiment, defineExperiment, assertNever } from "@trevosdk/react";
 import type { DraftFormState, FrozenEggBatch, FrozenEmbryoBatch } from "../../api/types";
 import FrozenBatchRow from "./FrozenBatchRow";
+import FrozenStorageChoiceVariant from "./FrozenStorageChoiceVariant";
 
 interface Props {
   form: DraftFormState;
   onChange: (updates: Partial<DraftFormState>) => void;
 }
 
+const frozenReservesChoiceExperiment = defineExperiment(
+  "make-existing-frozen-reserves-a-clear",
+  ["control", "variant"],
+);
+
 export default function FrozenStorage({ form, onChange }: Props) {
+  const variant = useExperiment(frozenReservesChoiceExperiment);
+
+  if (variant === "variant") {
+    return <FrozenStorageChoiceVariant form={form} onChange={onChange} />;
+  }
+
+  if (variant !== "control") {
+    return assertNever(variant);
+  }
+
   const addEggBatch = () => {
     if (form.frozen_egg_batches.length >= 5) return;
     onChange({
